@@ -34,6 +34,15 @@ DB_PATH = Path(__file__).parents[2] / "data" / "pses.duckdb"
 # Q73a–Q73w are 2024-only stress sub-questions; exclude from stable analysis
 Q73_FILTER = "QUESTION NOT LIKE 'Q73%'"
 
+# Subquery: questions where SCORE100 is non-null in all 4 survey years
+_FSQ = """
+    SELECT QUESTION
+    FROM   pses_analysis
+    WHERE  is_stable = true
+    GROUP  BY QUESTION
+    HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
+"""
+
 SAMPLE_INDICATORS = ("Leadership", "Workplace well-being")
 
 console = Console()
@@ -52,8 +61,7 @@ SELECT
     SUBINDICATORENG,
     AVG(SCORE100) AS mean_score
 FROM pses_analysis
-WHERE is_stable = true
-  AND is_scored = true
+WHERE QUESTION IN ({_FSQ})
   AND {Q73_FILTER}
 GROUP BY
     SURVEYR,
@@ -106,8 +114,7 @@ def _build_question_correlations(con: duckdb.DuckDBPyConnection) -> None:
         f"""
         SELECT SURVEYR, QUESTION, SCORE100
         FROM   pses_analysis
-        WHERE  is_stable = true
-          AND  is_scored = true
+        WHERE  QUESTION IN ({_FSQ})
           AND  {Q73_FILTER}
         ORDER  BY QUESTION, SURVEYR
         """
@@ -261,13 +268,12 @@ def _build_chi_square_results(con: duckdb.DuckDBPyConnection) -> None:
     """Compare answer1–5 distribution between 2019 and 2024 per question."""
 
     rows = con.execute(
-        """
+        f"""
         SELECT QUESTION, SURVEYR,
                answer1, answer2, answer3, answer4, answer5,
                ANSCOUNT
         FROM   pses_analysis
-        WHERE  is_stable = true
-          AND  is_scored = true
+        WHERE  QUESTION IN ({_FSQ})
           AND  QUESTION NOT LIKE 'Q73%'
           AND  SURVEYR IN (2019, 2024)
         ORDER  BY QUESTION, SURVEYR
@@ -278,10 +284,10 @@ def _build_chi_square_results(con: duckdb.DuckDBPyConnection) -> None:
     labels: dict[str, tuple[str, str]] = {
         q: (ie, se)
         for q, ie, se in con.execute(
-            """
+            f"""
             SELECT DISTINCT QUESTION, INDICATORENG, SUBINDICATORENG
             FROM   pses_analysis
-            WHERE  is_stable = true AND is_scored = true
+            WHERE  QUESTION IN ({_FSQ})
               AND  QUESTION NOT LIKE 'Q73%'
             """
         ).fetchall()
