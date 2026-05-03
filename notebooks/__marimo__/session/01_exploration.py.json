@@ -1,0 +1,125 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.4",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "e71387a88cd985fa592c118e085663ac",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "5f58d6f04d9ad1ec146cc0efb0a1c570",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='MJUe-0' random-id='70592d8d-cb44-7f29-7289-d3d6f96a6403'><marimo-dropdown data-initial-value='[&quot;Employee engagement&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Theme&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;Employee engagement&quot;,&quot;Leadership&quot;,&quot;Workforce&quot;,&quot;Workplace&quot;,&quot;Workplace well-being&quot;,&quot;Compensation&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false'></marimo-dropdown></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "9bb3328a731e879b1389d8f9563b7b4e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='vblA-0' random-id='14ec0333-de69-e3a7-bd8c-cc890623c6c3'><marimo-multiselect data-initial-value='[&quot;2019&quot;,&quot;2020&quot;,&quot;2022&quot;,&quot;2024&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Survey years&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;2019&quot;,&quot;2020&quot;,&quot;2022&quot;,&quot;2024&quot;]' data-full-width='false'></marimo-multiselect></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "2b7640ceaa38b93d93c038b4713b1299",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='bkHC-0' random-id='a557304d-a1c9-8a22-4b15-a17b71bb5d2e'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;SURVEYR&#92;&quot;:2019,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;A psychologically healthy workplace&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:21,&#92;&quot;mean_score&#92;&quot;:67.66666666666667},{&#92;&quot;SURVEYR&#92;&quot;:2020,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;A psychologically healthy workplace&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:21,&#92;&quot;mean_score&#92;&quot;:72.33333333333333},{&#92;&quot;SURVEYR&#92;&quot;:2022,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;A psychologically healthy workplace&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:21,&#92;&quot;mean_score&#92;&quot;:68.66666666666667},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;A psychologically healthy workplace&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:21,&#92;&quot;mean_score&#92;&quot;:64.0},{&#92;&quot;SURVEYR&#92;&quot;:2019,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Work-related stress&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:22,&#92;&quot;mean_score&#92;&quot;:56.5},{&#92;&quot;SURVEYR&#92;&quot;:2020,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Work-related stress&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:22,&#92;&quot;mean_score&#92;&quot;:54.5},{&#92;&quot;SURVEYR&#92;&quot;:2022,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Work-related stress&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:22,&#92;&quot;mean_score&#92;&quot;:54.0},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Work-related stress&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:22,&#92;&quot;mean_score&#92;&quot;:50.5}]&quot;' data-total-rows='8' data-total-columns='4' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='false' data-page-size='10' data-field-types='[[&quot;SURVEYR&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;SUBINDICATORENG&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;SUBINDICATORID&quot;,[&quot;integer&quot;,&quot;i64&quot;]],[&quot;mean_score&quot;,[&quot;number&quot;,&quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-show-data-types='true' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "633cabdf26783104fb1646c00d36600d",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "8b4fafe9fceb76d3f98a10b11d9d0e7e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "c7034c350756245b12d9f55a4e36a09c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='SFPL-0' random-id='a394b03d-4f20-38d3-3640-5512b7cf80fd'><marimo-table data-initial-value='[]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Chi-square results (2019 vs 2024)&lt;/span&gt;&lt;/span&gt;&quot;' data-data='&quot;[{&#92;&quot;_marimo_row_id&#92;&quot;:0,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q74&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 74. Overall, my level of work-related stress is...&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Work-related stress&#92;&quot;,&#92;&quot;&#92;&#92;u03c7&#92;&#92;u00b2&#92;&quot;:9586.1,&#92;&quot;p-value&#92;&quot;:0.0,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:1,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q76&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 76. My department or agency does a good job of raising awareness of mental health in the workplace.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;A psychologically healthy workplace&#92;&quot;,&#92;&quot;&#92;&#92;u03c7&#92;&#92;u00b2&#92;&quot;:4171.8,&#92;&quot;p-value&#92;&quot;:0.0,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:2,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q75&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 75. After my workday, I feel emotionally drained.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Work-related stress&#92;&quot;,&#92;&quot;&#92;&#92;u03c7&#92;&#92;u00b2&#92;&quot;:3425.2,&#92;&quot;p-value&#92;&quot;:0.0,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:3,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q81&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 81. I would describe my workplace as being psychologically healthy.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;A psychologically healthy workplace&#92;&quot;,&#92;&quot;&#92;&#92;u03c7&#92;&#92;u00b2&#92;&quot;:1331.6,&#92;&quot;p-value&#92;&quot;:4.783231739434586e-287,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:4,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q83&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 83. I am equipped to support employees in my work unit who are experiencing mental health issues.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;A psychologically healthy workplace&#92;&quot;,&#92;&quot;&#92;&#92;u03c7&#92;&#92;u00b2&#92;&quot;:494.2,&#92;&quot;p-value&#92;&quot;:1.207250866318554e-105,&#92;&quot;Significant&#92;&quot;:true}]&quot;' data-total-rows='5' data-total-columns='6' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='false' data-page-size='10' data-field-types='[[&quot;QUESTION&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;Question text&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;Subtheme&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;\u03c7\u00b2&quot;,[&quot;number&quot;,&quot;f64&quot;]],[&quot;p-value&quot;,[&quot;number&quot;,&quot;f64&quot;]],[&quot;Significant&quot;,[&quot;boolean&quot;,&quot;bool&quot;]]]' data-selection='&quot;single&quot;' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-show-data-types='true' data-show-page-size-selector='false' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-has-stable-row-id='true' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "AVcE",
+      "code_hash": "e18761b7e083376331e112a50bddbc2c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><em>Select a question from the table above to see the response distribution.</em></span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "hptI",
+      "code_hash": "639537bf9f67770e79f946ea2c3ff633",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "ancestor-stopped",
+          "evalue": "This cell wasn't run because an ancestor was stopped with `mo.stop`: ",
+          "traceback": []
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "XBRz",
+      "code_hash": "1a2bb7b1288de6f10549ff401f49204c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"workplace-well-being-summary-for-leadership\">Workplace well-being \u2014 Summary for Leadership</h2>\n<span class=\"paragraph\">All subthemes under <strong>Workplace well-being</strong> declined between 2022 and 2024.\nThe steepest drop was in <strong>A psychologically healthy workplace</strong> (-4.7 points),\nand the lowest-scoring subtheme in 2024 is <strong>Work-related stress</strong>\n(50.5 / 100).</span>\n<h3 id=\"largest-declines-20222024\">Largest declines (2022\u21922024)</h3>\n<ul>\n<li><strong>A psychologically healthy workplace</strong>: -4.7 points (2022\u21922024)</li>\n<li><strong>Work-related stress</strong>: -3.5 points (2022\u21922024)</li>\n</ul>\n<h3 id=\"what-this-means\">What this means</h3>\n<span class=\"paragraph\">Scores represent the percentage of respondents giving a positive or neutral response,\nexpressed on a 0\u2013100 scale. A decline of -4.7 points in a single\nsurvey cycle \u2014 with ~186,000 respondents \u2014 is both statistically significant and\noperationally meaningful.</span>\n<blockquote>\n<span class=\"paragraph\"><strong>Note:</strong> Statistical significance is expected at this sample size. Use the magnitude\nof change, not the p-value, as the primary indicator of policy relevance.</span>\n</blockquote></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
