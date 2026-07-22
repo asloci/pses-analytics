@@ -10,3 +10,5 @@ wheels/
 .venv
 data/
 *.duckdb
+.DS_Store
+PSES_HANDOFF.md
