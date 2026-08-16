@@ -99,8 +99,7 @@ def _(con, mo):
     """)
     
     row_count = con.execute(f"SELECT COUNT(*) FROM {RAW_TABLE}").fetchone()[0]
-    _cols = con.execute(f"DESCRIBE {RAW_TABLE}").fetchall()
-    
+
     mo.md(f"**✓ Ingestion Complete**: {row_count:,} rows loaded into `{RAW_TABLE}`")
     
     return con, RAW_TABLE
@@ -113,7 +112,7 @@ def _(RAW_TABLE, con, mo):
     
     Let's verify the ingestion by checking the schema and some basic statistics.
     """
-    _cols = con.execute(f"DESCRIBE {RAW_TABLE}").fetchall()
+    _cols = con.execute(f"SELECT column_name, column_type FROM duckdb_columns('{RAW_TABLE}')").fetchall()
     
     mo.md("**Schema:**")
     for col_name, col_type in _cols[:20]:  # Show first 20 columns
