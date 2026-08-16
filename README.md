@@ -1,6 +1,6 @@
 # PSES Analytics
 
-A reproducible data engineering and analysis workbench for the Public Service Employee Survey (PSES) — Canada's federal public service employee survey with 287,000+ respondents.
+**WORK IN PROGRESS** A reproducible data engineering and analysis workbench for the Public Service Employee Survey (PSES) — Canada's federal public service employee survey with 287,000+ respondents.
 
 ## Overview
 
