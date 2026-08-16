@@ -33,7 +33,6 @@ def _():
     import marimo as mo
     import duckdb
     import polars as pl
-    import os
     from pathlib import Path
     
     # Ensure data directory exists
@@ -59,9 +58,9 @@ def _(db_path, mo):
     con = duckdb.connect(db_path)
     
     if db_exists:
-        mo.md(f"**Note**: Database file `{db_path}` already exists. All tables will be recreated.")
+        _msg = mo.md(f"**Note**: Database file `{db_path}` already exists. All tables will be recreated.")
     else:
-        mo.md(f"**Creating new database**: `{db_path}`")
+        _msg = mo.md(f"**Creating new database**: `{db_path}`")
     
     return con, db_exists
 
@@ -100,7 +99,7 @@ def _(con, mo):
     """)
     
     row_count = con.execute(f"SELECT COUNT(*) FROM {RAW_TABLE}").fetchone()[0]
-    cols = con.execute(f"DESCRIBE {RAW_TABLE}").fetchall()
+    _cols = con.execute(f"DESCRIBE {RAW_TABLE}").fetchall()
     
     mo.md(f"**✓ Ingestion Complete**: {row_count:,} rows loaded into `{RAW_TABLE}`")
     
@@ -114,16 +113,16 @@ def _(RAW_TABLE, con, mo):
     
     Let's verify the ingestion by checking the schema and some basic statistics.
     """
-    cols = con.execute(f"DESCRIBE {RAW_TABLE}").fetchall()
+    _cols = con.execute(f"DESCRIBE {RAW_TABLE}").fetchall()
     
     mo.md("**Schema:**")
-    for col_name, col_type in cols[:20]:  # Show first 20 columns
+    for col_name, col_type in _cols[:20]:  # Show first 20 columns
         mo.md(f"  - `{col_name}`: {col_type}")
-    mo.md(f"  ... and {len(cols) - 20} more columns")
+    mo.md(f"  ... and {len(_cols) - 20} more columns")
     
     # Check survey years
-    years = con.execute("SELECT DISTINCT SURVEYR FROM raw_pses ORDER BY SURVEYR").fetchall()
-    mo.md(f"**Survey Years**: {[y[0] for y in years]}")
+    _years = con.execute("SELECT DISTINCT SURVEYR FROM raw_pses ORDER BY SURVEYR").fetchall()
+    mo.md(f"**Survey Years**: {[y[0] for y in _years]}")
     
     return con
 
@@ -200,8 +199,8 @@ def _(con, csv_path, mo):
         ORDER BY QUESTION
     """, [csv_path])
     
-    n_theme = con.execute("SELECT COUNT(*) FROM theme_map").fetchone()[0]
-    mo.md(f"**✓ theme_map created**: {n_theme} rows")
+    _n_theme_map = con.execute("SELECT COUNT(*) FROM theme_map").fetchone()[0]
+    mo.md(f"**✓ theme_map created**: {_n_theme_map} rows")
     
     return con, csv_path
 
@@ -226,12 +225,12 @@ def _(con, csv_path, mo):
         ORDER BY INDICATORID, SUBINDICATORID
     """, [csv_path])
     
-    n_indicator = con.execute("SELECT COUNT(*) FROM indicator_map").fetchone()[0]
-    mo.md(f"**✓ indicator_map created**: {n_indicator} rows")
+    _n_indicator = con.execute("SELECT COUNT(*) FROM indicator_map").fetchone()[0]
+    mo.md(f"**✓ indicator_map created**: {_n_indicator} rows")
     
     # Clean up temp file
-    import os
-    os.unlink(csv_path)
+    import os as _os
+    _os.unlink(csv_path)
     
     return con
 
@@ -296,18 +295,18 @@ def _(con, mo):
         "answer1", "answer2", "answer3", "answer4", "answer5", "answer6", "answer7"
     ]
     
-    def int_expr(col: str) -> str:
+    def _int_expr(col: str) -> str:
         return f"NULLIF(CAST({col} AS INTEGER), 9999) AS {col}"
     
-    score5_expr = "NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5"
+    _score5_expr = "NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5"
     
-    shared_select = (
+    _shared_select = (
         "CAST(SURVEYR AS INTEGER) AS SURVEYR, QUESTION," +
-        ", ".join(int_expr(c) for c in INT_COLS) +
-        f", {score5_expr}"
+        ", ".join(_int_expr(c) for c in INT_COLS) +
+        f", {_score5_expr}"
     )
     
-    return con, INT_COLS, shared_select
+    return con, INT_COLS, _shared_select
 
 
 @app.cell
@@ -374,8 +373,8 @@ def _(con, INT_COLS, shared_select, mo):
     
     Whole-of-government demographic/org slices.
     """
-    int_exprs = ", ".join(f"NULLIF(CAST({c} AS INTEGER), 9999) AS {c}" for c in INT_COLS)
-    score5_expr = "NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5"
+    _int_exprs = ", ".join(f"NULLIF(CAST({c} AS INTEGER), 9999) AS {c}" for c in INT_COLS)
+    _score5_expr_sliced = "NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5"
     
     con.execute(f"""
         CREATE OR REPLACE TABLE pses_sliced AS
@@ -384,8 +383,8 @@ def _(con, INT_COLS, shared_select, mo):
             QUESTION,
             BYCOND,
             DEMCODE,
-            {int_exprs},
-            {score5_expr}
+            {_int_exprs},
+            {_score5_expr_sliced}
         FROM raw_pses
         WHERE BYCOND IS NOT NULL
           AND LEVEL1ID = 0
@@ -504,8 +503,8 @@ def _(con, FSQ, mo):
             SURVEYR
     """)
     
-    n_theme = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
-    mo.md(f"**✓ theme_scores created**: {n_theme} rows")
+    _n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
+    mo.md(f"**✓ theme_scores created**: {_n_theme_scores} rows")
     
     return con
 
@@ -571,17 +570,17 @@ def _(con, FSQ, mo):
     for surveyr, question, score in long_rows:
         pivot[question][surveyr] = float(score)
     
-    years = [2019, 2020, 2022, 2024]
+    _years_list = [2019, 2020, 2022, 2024]
     
     # Keep only questions present in all 4 years
     questions = sorted(
         q for q, yr_map in pivot.items()
-        if all(y in yr_map for y in years)
+        if all(y in yr_map for y in _years_list)
     )
     
-    # Build vectors: question -> list[score] aligned to `years`
+    # Build vectors: question -> list[score] aligned to years
     vectors = {
-        q: [pivot[q][y] for y in years]
+        q: [pivot[q][y] for y in _years_list]
         for q in questions
     }
     
@@ -591,8 +590,8 @@ def _(con, FSQ, mo):
         v_a = vectors[q_a]
         v_b = vectors[q_b]
         try:
-            r, p = pearsonr(v_a, v_b)
-            corr_rows.append((q_a, q_b, float(r), float(p)))
+            r, _p = pearsonr(v_a, v_b)
+            corr_rows.append((q_a, q_b, float(r), float(_p)))
         except Exception:
             pass  # skip degenerate pairs
     
@@ -674,13 +673,13 @@ def _(con, FSQ, mo):
             continue
         ind_eng, sub_eng = labels.get(q, ("", ""))
         try:
-            chi2, p, dof, _ = chi2_contingency([counts_2019, counts_2024])
+            chi2, _p_chi, dof, _ = chi2_contingency([counts_2019, counts_2024])
             chi_rows.append((
                 q,
                 ind_eng,
                 sub_eng,
                 float(chi2),
-                float(p),
+                float(_p_chi),
                 int(dof),
                 bool(p < 0.05),
             ))
