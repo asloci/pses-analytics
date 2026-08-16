@@ -11,4 +11,6 @@ wheels/
 data/
 *.duckdb
 .DS_Store
-PSES_HANDOFF.md
+
+# Accidental binary file
+self

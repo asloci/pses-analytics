@@ -6,18 +6,46 @@ app = marimo.App(width="columns")
 
 @app.cell
 def _():
+    """
+    # PSES Data Exploration & Analysis
+    
+    ## Overview
+    
+    This notebook provides an interactive exploration interface for the PSES analytical dataset.
+    It connects to the DuckDB database created by `01_data_engineering.py` and provides:
+    
+    - **Theme Selection**: Choose which organizational theme to analyze
+    - **Year Selection**: Filter by survey year(s)
+    - **Trend Visualization**: Line charts showing subtheme scores over time
+    - **Change Analysis**: Heatmap of year-over-year score changes
+    - **Statistical Significance**: Chi-square test results table
+    - **Question Drill-Down**: Deep dive into individual question response distributions
+    - **Narrative Summary**: Plain-language findings for leadership audiences
+    
+    **Prerequisite**: Run `01_data_engineering.py` first to build the analytical tables.
+    
+    **Database**: `data/pses.duckdb` (read-only mode)
+    """
     import marimo as mo
     import duckdb
     import polars as pl
     import altair as alt
-
-    con = duckdb.connect("data/pses.duckdb", read_only=True)
+    from pathlib import Path
+    
+    db_path = str(Path("data") / "pses.duckdb")
+    con = duckdb.connect(db_path, read_only=True)
+    
     return alt, con, mo, pl
 
 
 @app.cell
 def _(con, mo):
-    # Cell 2a — Theme options (data-driven)
+    """
+    ## Controls
+    
+    ### Theme Selector
+    Select which organizational theme to analyze.
+    """
     _theme_df = con.execute("""
         SELECT DISTINCT INDICATORENG, INDICATORID
         FROM indicator_map
@@ -40,7 +68,10 @@ def _(con, mo):
 
 @app.cell
 def _(mo):
-    # Cell 2b — Year selector
+    """
+    ### Year Selector
+    Select which survey years to include in the visualization.
+    """
     year_selector = mo.ui.multiselect(
         options=["2019", "2020", "2022", "2024"],
         value=["2019", "2020", "2022", "2024"],
@@ -51,8 +82,13 @@ def _(mo):
 
 
 @app.cell
-def _(con, theme_selector, year_selector):
-    # Cell 3 — Theme score trend data
+def _(con, mo, theme_selector, year_selector):
+    """
+    ## Theme Score Trend Data
+    
+    Query the theme_scores table for the selected theme and years.
+    This data powers the trend line chart.
+    """
     _selected_years = [int(y) for y in year_selector.value]
 
     theme_trend_df = con.execute("""
@@ -75,7 +111,12 @@ def _(con, theme_selector, year_selector):
 
 @app.cell
 def _(alt, mo, theme_selector, theme_trend_df):
-    # Cell 4 — Trend line chart
+    """
+    ## Trend Line Chart
+    
+    Line chart showing subtheme scores over time for the selected theme.
+    Each line represents a subtheme, with points at each survey year.
+    """
     _base = alt.Chart(theme_trend_df).encode(
         x=alt.X(
             "SURVEYR:O",
@@ -84,7 +125,7 @@ def _(alt, mo, theme_selector, theme_trend_df):
         ),
         y=alt.Y(
             "mean_score:Q",
-            title="Mean score (0–100)",
+            title="Mean score (0-100)",
             scale=alt.Scale(domain=[0, 100]),
         ),
         color=alt.Color(
@@ -115,7 +156,14 @@ def _(alt, mo, theme_selector, theme_trend_df):
 
 @app.cell
 def _(alt, con, mo, theme_selector):
-    # Cell 5 — Year-over-year delta heatmap
+    """
+    ## Year-over-Year Delta Heatmap
+    
+    Heatmap showing the change in scores between survey cycles.
+    Each cell represents the delta from one year to the next for a subtheme.
+    
+    **Color Scale**: Red = decline, Green = improvement, centered at 0.
+    """
     _yoy_df = con.execute("""
         SELECT
             yc.SUBINDICATORENG,
@@ -146,7 +194,7 @@ def _(alt, con, mo, theme_selector):
             ),
             color=alt.Color(
                 "delta:Q",
-                title="Δ score",
+                title="Change in score",
                 scale=alt.Scale(
                     scheme="redyellowgreen",
                     domain=[-10, 10],
@@ -156,7 +204,7 @@ def _(alt, con, mo, theme_selector):
             tooltip=[
                 alt.Tooltip("SUBINDICATORENG:N", title="Subtheme"),
                 alt.Tooltip("period:O", title="Period"),
-                alt.Tooltip("delta:Q", title="Δ score", format="+.1f"),
+                alt.Tooltip("delta:Q", title="Delta", format="+.1f"),
             ],
         )
         .properties(
@@ -190,7 +238,12 @@ def _(alt, con, mo, theme_selector):
 
 @app.cell
 def _(con, mo, pl, theme_selector):
-    # Cell 6 — Chi-square significance table
+    """
+    ## Chi-Square Significance Table
+    
+    Table showing chi-square test results for 2019 vs 2024 comparison.
+    Select a question to drill down into its response distribution.
+    """
     _chi_df = con.execute("""
         SELECT
             cr.QUESTION,
@@ -216,12 +269,12 @@ def _(con, mo, pl, theme_selector):
             pl.col("QUESTION"),
             pl.col("TITLE_E").alias("Question text"),
             pl.col("SUBINDICATORENG").alias("Subtheme"),
-            pl.col("chi2").round(1).alias("χ²"),
+            pl.col("chi2").round(1).alias("Chi-squared"),
             pl.col("p_value").alias("p-value"),
             pl.col("significant").alias("Significant"),
         ]),
         selection="single",
-        label="Chi-square results (2019 vs 2024)",
+        label="Chi-square results (2019 vs 2024) - Select a question to drill down",
     )
     chi_table
     return (chi_table,)
@@ -229,7 +282,11 @@ def _(con, mo, pl, theme_selector):
 
 @app.cell
 def _(chi_table, mo):
-    # Cell 7a — Guard: stop if no question selected
+    """
+    ## Question Selection Guard
+    
+    Show message if no question is selected from the chi-square table.
+    """
     mo.stop(
         len(chi_table.value) == 0,
         mo.md("*Select a question from the table above to see the response distribution.*")
@@ -243,7 +300,12 @@ def _(chi_table, mo):
 
 @app.cell
 def _(alt, con, mo, selected_question, selected_title):
-    # Cell 7b — Response distribution chart
+    """
+    ## Question Response Distribution
+    
+    Bar chart showing the response distribution (Positive/Neutral/Negative) 
+    for the selected question, comparing 2019 and 2024 side by side.
+    """
     _dist_df = con.execute("""
         SELECT
             SURVEYR,
@@ -302,7 +364,11 @@ def _(alt, con, mo, selected_question, selected_title):
 
 @app.cell
 def _(con, mo, theme_selector):
-    # Cell 8 — Narrative markdown summary
+    """
+    ## Narrative Summary
+    
+    Plain-language summary of findings for the selected theme, suitable for leadership audiences.
+    """
     _summary_df = con.execute("""
         WITH ranked AS (
             SELECT
@@ -335,7 +401,7 @@ def _(con, mo, theme_selector):
     _lowest_name = _scores_df["SUBINDICATORENG"][0]
 
     _bullet_lines = "\n".join([
-        f"- **{row['SUBINDICATORENG']}**: {row['delta']:+.1f} points (2022→2024)"
+        f"- **{row['SUBINDICATORENG']}**: {row['delta']:+.1f} points (2022 to 2024)"
         for row in _summary_df.iter_rows(named=True)
     ])
 
@@ -347,14 +413,14 @@ def _(con, mo, theme_selector):
     and the lowest-scoring subtheme in 2024 is **{_lowest_name}**
     ({_lowest_score:.1f} / 100).
 
-    ### Largest declines (2022→2024)
+    ### Largest declines (2022 to 2024)
 
     {_bullet_lines}
 
     ### What this means
 
     Scores represent the percentage of respondents giving a positive or neutral response,
-    expressed on a 0–100 scale. A decline of {_worst_delta:+.1f} points in a single
+    expressed on a 0-100 scale. A decline of {abs(_worst_delta):.1f} points in a single
     survey cycle — with ~186,000 respondents — is both statistically significant and
     operationally meaningful.
 
