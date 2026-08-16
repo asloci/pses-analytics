@@ -8,85 +8,84 @@ app = marimo.App(width="columns")
 def _():
     """
     # PSES Data Engineering Pipeline
-    
+
     ## Overview
-    
+
     This notebook builds the complete analytical dataset for the Public Service Employee Survey (PSES).
     It performs the following steps:
-    
+
     1. **Ingestion**: Downloads the raw PSES CSV from Canada.ca and loads it into DuckDB
     2. **Theme Mapping**: Loads the theme/indicator taxonomy from Subset 1 CSV
     3. **Transformation**: Creates whole-of-government analytical tables
     4. **Statistical Analysis**: Computes theme scores, year-over-year changes, correlations, and chi-square tests
-    
+
     **Output**: All tables are written to `data/pses.duckdb`
-    
+
     **Reproducibility**: Any user can run this notebook from scratch to rebuild all analytical tables.
     If `data/pses.duckdb` already exists, it will be overwritten to ensure a clean build.
-    
+
     **Data Source**: 
     - Main dataset: https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv
     - Theme taxonomy: https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv
-    
+
     **Note on Government of Canada CSV files**: They are BOM-prefixed and Latin-1 encoded.
     """
     import marimo as mo
     import duckdb
     import polars as pl
+    import os
     from pathlib import Path
-    
+
     # Ensure data directory exists
     data_dir = Path("data")
     data_dir.mkdir(exist_ok=True)
-    
+
     db_path = str(data_dir / "pses.duckdb")
-    
-    return db_path, mo
+    return db_path, duckdb, mo, os
 
 
 @app.cell
-def _(db_path, mo):
+def _(db_path, duckdb, mo, os):
     """
     ## Step 0: Database Setup
-    
+
     Connect to DuckDB. If the database file already exists, we'll drop and recreate
     all tables to ensure a clean, reproducible build.
     """
     # Check if DB exists - if so, we'll rebuild everything
     db_exists = os.path.exists(db_path)
-    
+
     con = duckdb.connect(db_path)
-    
+
     if db_exists:
         _msg = mo.md(f"**Note**: Database file `{db_path}` already exists. All tables will be recreated.")
     else:
         _msg = mo.md(f"**Creating new database**: `{db_path}`")
-    
-    return con, db_exists
+    return (con,)
 
 
 @app.cell
 def _(con, mo):
     """
     ## Step 1: Data Ingestion
-    
+
     ### Description
     Download and ingest the main PSES dataset directly from Canada.ca into DuckDB.
-    
+
     **Source**: `https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv`
-    
+
     **Approach**: DuckDB's `read_csv_auto` function streams the CSV directly from the URL
     without downloading an intermediate file. This is efficient and handles the
     Government of Canada's BOM-prefixed, Latin-1 encoded files automatically.
-    
+
     **Output Table**: `raw_pses` - Complete raw dataset with all columns and rows.
-    
+
     **Note**: The `ignore_errors=true` parameter allows DuckDB to skip malformed rows,
     which is important for government datasets that may have data quality issues.
     """
     CSV_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv"
     RAW_TABLE = "raw_pses"
-    
+
     con.execute(f"DROP TABLE IF EXISTS {RAW_TABLE}")
     con.execute(f"""
         CREATE TABLE {RAW_TABLE} AS
@@ -97,63 +96,63 @@ def _(con, mo):
             ignore_errors = true
         )
     """)
-    
+
     row_count = con.execute(f"SELECT COUNT(*) FROM {RAW_TABLE}").fetchone()[0]
 
     mo.md(f"**✓ Ingestion Complete**: {row_count:,} rows loaded into `{RAW_TABLE}`")
-    
-    return con, RAW_TABLE
+    return (RAW_TABLE,)
 
 
 @app.cell
 def _(RAW_TABLE, con, mo):
     """
     ### Ingestion Verification
-    
+
     Let's verify the ingestion by checking the schema and some basic statistics.
     """
-    _cols = con.execute(f"SELECT column_name, column_type FROM duckdb_columns('{RAW_TABLE}')").fetchall()
-    
+    # Fix Binder Error: The duckdb_columns function might not support VARCHAR arguments. 
+    # Using information_schema instead, which is standard SQL.
+    _cols = con.execute(f"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '{RAW_TABLE}'").fetchall()
+
     mo.md("**Schema:**")
     for col_name, col_type in _cols[:20]:  # Show first 20 columns
         mo.md(f"  - `{col_name}`: {col_type}")
     mo.md(f"  ... and {len(_cols) - 20} more columns")
-    
+
     # Check survey years
-    _years = con.execute("SELECT DISTINCT SURVEYR FROM raw_pses ORDER BY SURVEYR").fetchall()
+    _years = con.execute(f"SELECT DISTINCT SURVEYR FROM {RAW_TABLE} ORDER BY SURVEYR").fetchall()
     mo.md(f"**Survey Years**: {[y[0] for y in _years]}")
-    
-    return con
+    return
 
 
 @app.cell
-def _(con, mo):
+def _(mo):
     """
     ## Step 2: Theme Mapping
-    
+
     ### Description
     Load the theme and indicator taxonomy from PSES Subset 1 CSV.
-    
+
     **Source**: `https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv`
-    
+
     **Output Tables**:
     - `theme_map`: One row per QUESTION with its theme/subtheme labels (207 rows)
     - `indicator_map`: Distinct indicator/sub-indicator combinations - a lookup table (23 rows)
-    
+
     **Filter**: We only load rows where LEVEL1ID = '00' and BYCOND IS NULL, which gives us
     the whole-of-government (WOG) theme taxonomy.
-    
+
     **Note**: Government of Canada CSV files require special handling for BOM and encoding.
     We use a helper function to fetch, strip BOM, and decode from Latin-1 to UTF-8.
     """
     import tempfile
     import httpx
-    
+
     SUBSET1_URL = (
         "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/"
         "ses-2025/subset-1-sous-ensemble-1.csv"
     )
-    
+
     def fetch_with_bom_strip(url: str) -> str:
         """Fetch a BOM-prefixed CSV from a URL, strip the BOM, write to temp file, return path."""
         response = httpx.get(url, timeout=60, follow_redirects=True)
@@ -168,19 +167,18 @@ def _(con, mo):
         tmp.write(text)
         tmp.close()
         return tmp.name
-    
+
     csv_path = fetch_with_bom_strip(SUBSET1_URL)
-    
+
     mo.md(f"**✓ Fetched theme CSV**: {SUBSET1_URL}")
-    
-    return con, csv_path
+    return (csv_path,)
 
 
 @app.cell
 def _(con, csv_path, mo):
     """
     ### Build theme_map table
-    
+
     One row per QUESTION with theme/subtheme metadata.
     """
     con.execute("""
@@ -197,18 +195,17 @@ def _(con, csv_path, mo):
           AND BYCOND IS NULL
         ORDER BY QUESTION
     """, [csv_path])
-    
+
     _n_theme_map = con.execute("SELECT COUNT(*) FROM theme_map").fetchone()[0]
     mo.md(f"**✓ theme_map created**: {_n_theme_map} rows")
-    
-    return con, csv_path
+    return
 
 
 @app.cell
 def _(con, csv_path, mo):
     """
     ### Build indicator_map table
-    
+
     Distinct indicator/sub-indicator combinations - serves as a lookup reference.
     """
     con.execute("""
@@ -223,22 +220,21 @@ def _(con, csv_path, mo):
           AND BYCOND IS NULL
         ORDER BY INDICATORID, SUBINDICATORID
     """, [csv_path])
-    
+
     _n_indicator = con.execute("SELECT COUNT(*) FROM indicator_map").fetchone()[0]
     mo.md(f"**✓ indicator_map created**: {_n_indicator} rows")
-    
+
     # Clean up temp file
     import os as _os
     _os.unlink(csv_path)
-    
-    return con
+    return
 
 
 @app.cell
 def _(con, mo):
     """
     ### Theme Taxonomy Summary
-    
+
     Let's preview the theme structure to verify the mapping loaded correctly.
     """
     theme_sample = con.execute("""
@@ -247,44 +243,43 @@ def _(con, mo):
         ORDER BY INDICATORID, SUBINDICATORID, QUESTION
         LIMIT 15
     """).fetchall()
-    
+
     mo.md("**Sample theme_map rows:**")
     mo.md("| Question | Theme | Subtheme | Title |")
     mo.md("|----------|-------|----------|-------|")
     for row in theme_sample:
         mo.md(f"| {row[0]} | {row[3]} | {row[5]} | {row[1][:50]}... |")
-    
-    return con
+    return
 
 
 @app.cell
 def _(con, mo):
     """
     ## Step 3: Data Transformation
-    
+
     ### Description
     Transform the raw data into analytical tables. This step creates three key tables:
-    
+
     - **pses_wog**: Whole-of-government spine (LEVEL1ID=0, LEVEL2ID=0, BYCOND IS NULL)
       - Contains typed columns with 9999→NULL conversion for scoring fields
       - Includes `is_scored` and `is_stable` flags
       - ~772 rows (one per question per year for WOG)
-    
+
     - **pses_sliced**: Whole-of-government demographic/org slices (LEVEL1ID=0, BYCOND IS NOT NULL)
       - Contains the same scoring columns as pses_wog
       - ~651K rows
-    
+
     - **pses_analysis**: Primary analytical table - joins pses_wog with theme_map
       - Adds theme/subtheme metadata to the WOG spine
       - ~772 rows
-    
+
     **Scoring Columns**: The following columns use 9999 as a sentinel for "missing" and are
     converted to INTEGER with NULL for 9999:
     - SCORE100, ANSCOUNT, POSITIVE, NEUTRAL, NEGATIVE, AGREE
     - answer1-answer7
-    
+
     **SCORE5**: Converted to DOUBLE with NULL for 9999.0
-    
+
     **is_scored**: TRUE when the cleaned SCORE100 is not null
     **is_stable**: TRUE when the question appeared in all survey years
     """
@@ -293,28 +288,38 @@ def _(con, mo):
         "SCORE100", "ANSCOUNT", "POSITIVE", "NEUTRAL", "NEGATIVE", "AGREE",
         "answer1", "answer2", "answer3", "answer4", "answer5", "answer6", "answer7"
     ]
-    
+
     def _int_expr(col: str) -> str:
         return f"NULLIF(CAST({col} AS INTEGER), 9999) AS {col}"
-    
+
     _score5_expr = "NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5"
-    
+
     _shared_select = (
         "CAST(SURVEYR AS INTEGER) AS SURVEYR, QUESTION," +
         ", ".join(_int_expr(c) for c in INT_COLS) +
         f", {_score5_expr}"
     )
-    
-    return con, INT_COLS, _shared_select
 
-
-@app.cell
-def _(con, INT_COLS, shared_select, mo):
     """
     ### Create pses_wog table
-    
+
     Whole-of-government spine with cleaned, typed columns.
     """
+    # Fixing NameError by defining shared_select using expressions from Step 3
+    if 'INT_COLS' not in locals():
+        INT_COLS = [
+            "SCORE100", "ANSCOUNT", "POSITIVE", "NEUTRAL", "NEGATIVE", "AGREE",
+            "answer1", "answer2", "answer3", "answer4", "answer5", "answer6", "answer7"
+        ]
+    def _int_expr(col: str) -> str:
+        return f"NULLIF(CAST({col} AS INTEGER), 9999) AS {col}"
+    _score5_expr = "NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5"
+    shared_select = (
+        "CAST(SURVEYR AS INTEGER) AS SURVEYR, QUESTION," +
+        ", ".join(_int_expr(c) for c in INT_COLS) +
+        f", {_score5_expr}"
+    )
+
     con.execute(f"""
         CREATE OR REPLACE TABLE pses_wog AS
         WITH
@@ -328,7 +333,7 @@ def _(con, INT_COLS, shared_select, mo):
               AND LEVEL2ID  = 0
               AND BYCOND IS NULL
           ),
-          
+
           -- questions present in every one of the 4 survey years
           stable_questions AS (
             SELECT QUESTION
@@ -341,7 +346,7 @@ def _(con, INT_COLS, shared_select, mo):
                 SELECT COUNT(DISTINCT SURVEYR) FROM raw_pses
             )
           )
-        
+
         SELECT
             b.SURVEYR,
             b.QUESTION,
@@ -353,28 +358,27 @@ def _(con, INT_COLS, shared_select, mo):
             (b.QUESTION IN (SELECT QUESTION FROM stable_questions)) AS is_stable
         FROM base b
     """)
-    
+
     wog_total = con.execute("SELECT COUNT(*) FROM pses_wog").fetchone()[0]
     wog_scored = con.execute("SELECT COUNT(DISTINCT QUESTION) FROM pses_wog WHERE is_scored").fetchone()[0]
     wog_stable = con.execute("SELECT COUNT(DISTINCT QUESTION) FROM pses_wog WHERE is_stable").fetchone()[0]
-    
+
     mo.md(f"**✓ pses_wog created**: {wog_total:,} rows")
     mo.md(f"  - Scored questions: {wog_scored}")
     mo.md(f"  - Stable across all years: {wog_stable}")
-    
-    return con
+    return (INT_COLS,)
 
 
 @app.cell
-def _(con, INT_COLS, shared_select, mo):
+def _(INT_COLS, con, mo):
     """
     ### Create pses_sliced table
-    
+
     Whole-of-government demographic/org slices.
     """
     _int_exprs = ", ".join(f"NULLIF(CAST({c} AS INTEGER), 9999) AS {c}" for c in INT_COLS)
     _score5_expr_sliced = "NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5"
-    
+
     con.execute(f"""
         CREATE OR REPLACE TABLE pses_sliced AS
         SELECT
@@ -388,18 +392,17 @@ def _(con, INT_COLS, shared_select, mo):
         WHERE BYCOND IS NOT NULL
           AND LEVEL1ID = 0
     """)
-    
+
     sliced_total = con.execute("SELECT COUNT(*) FROM pses_sliced").fetchone()[0]
     mo.md(f"**✓ pses_sliced created**: {sliced_total:,} rows")
-    
-    return con
+    return
 
 
 @app.cell
 def _(con, mo):
     """
     ### Create pses_analysis table
-    
+
     Primary analytical table - joins pses_wog with theme_map to add theme metadata.
     """
     con.execute("""
@@ -414,37 +417,36 @@ def _(con, mo):
         FROM pses_wog w
         INNER JOIN theme_map t ON w.QUESTION = t.QUESTION
     """)
-    
+
     analysis_total = con.execute("SELECT COUNT(*) FROM pses_analysis").fetchone()[0]
     mo.md(f"**✓ pses_analysis created**: {analysis_total:,} rows")
-    
-    return con
+    return
 
 
 @app.cell
-def _(con, mo):
+def _():
     """
     ## Step 4: Statistical Analysis Tables
-    
+
     ### Description
     Compute analytical tables that summarize and analyze the data:
-    
+
     - **theme_scores**: Mean SCORE100 per subtheme per year (72 rows)
       - Used for trend analysis across survey cycles
       - Only includes fully scored questions (SCORE100 non-null in all 4 years)
-    
+
     - **yoy_changes**: Year-over-year delta in mean_score per subtheme (54 rows)
       - Compares: 2019→2020, 2020→2022, 2022→2024
       - Allows tracking of trends between survey cycles
-    
+
     - **question_correlations**: Pearson r between every stable question pair (~1,711 rows)
       - Helps identify question clusters and construct validity
       - Note: With only 4 years (n=4), correlations should be interpreted cautiously
-    
+
     - **chi_square_results**: Chi-square test on answer1-5 distribution 2019 vs 2024 (59 rows)
       - Tests whether response distributions have changed significantly
       - With ~186,000 respondents, even small shifts are detectable
-    
+
     **Longitudinal Filter**: All analytical tables use the following filter to ensure
     only questions that are scored in ALL four years (2019, 2020, 2022, 2024) are included:
     ```sql
@@ -455,7 +457,7 @@ def _(con, mo):
         HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
     )
     ```
-    
+
     **Q73 Exclusion**: Q73a-Q73w are 2024-only stress sub-questions and are excluded from
     longitudinal analysis. Only Q74 and Q75 are valid stress trend questions.
     """
@@ -467,15 +469,14 @@ def _(con, mo):
         GROUP BY QUESTION
         HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
     """
-    
-    return con, FSQ
+    return (FSQ,)
 
 
 @app.cell
-def _(con, FSQ, mo):
+def _(FSQ, con, mo):
     """
     ### Create theme_scores table
-    
+
     Mean SCORE100 per subtheme per year for longitudinal analysis.
     """
     con.execute(f"""
@@ -501,18 +502,17 @@ def _(con, FSQ, mo):
             SUBINDICATORID,
             SURVEYR
     """)
-    
+
     _n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
     mo.md(f"**✓ theme_scores created**: {_n_theme_scores} rows")
-    
-    return con
+    return
 
 
 @app.cell
 def _(con, mo):
     """
     ### Create yoy_changes table
-    
+
     Year-over-year delta in mean_score per subtheme.
     """
     con.execute("""
@@ -537,24 +537,23 @@ def _(con, mo):
             a.SUBINDICATORENG,
             a.SURVEYR
     """)
-    
+
     n_yoy = con.execute("SELECT COUNT(*) FROM yoy_changes").fetchone()[0]
     mo.md(f"**✓ yoy_changes created**: {n_yoy} rows")
-    
-    return con
+    return
 
 
 @app.cell
-def _(con, FSQ, mo):
+def _(FSQ, con, mo):
     """
     ### Create question_correlations table
-    
+
     Pearson r between every stable question pair (Python-side computation with scipy).
     """
     import itertools
     from collections import defaultdict
     from scipy.stats import pearsonr
-    
+
     # One row per (SURVEYR, QUESTION) - spine is already unique on this key
     long_rows = con.execute(f"""
         SELECT SURVEYR, QUESTION, SCORE100
@@ -563,26 +562,26 @@ def _(con, FSQ, mo):
           AND QUESTION NOT LIKE 'Q73%'
         ORDER BY QUESTION, SURVEYR
     """).fetchall()
-    
+
     # Build pivot: question -> {year: score}
     pivot = defaultdict(dict)
     for surveyr, question, score in long_rows:
         pivot[question][surveyr] = float(score)
-    
+
     _years_list = [2019, 2020, 2022, 2024]
-    
+
     # Keep only questions present in all 4 years
     questions = sorted(
         q for q, yr_map in pivot.items()
         if all(y in yr_map for y in _years_list)
     )
-    
+
     # Build vectors: question -> list[score] aligned to years
     vectors = {
         q: [pivot[q][y] for y in _years_list]
         for q in questions
     }
-    
+
     # Compute all pairs
     corr_rows = []
     for q_a, q_b in itertools.combinations(questions, 2):
@@ -593,7 +592,7 @@ def _(con, FSQ, mo):
             corr_rows.append((q_a, q_b, float(r), float(_p)))
         except Exception:
             pass  # skip degenerate pairs
-    
+
     # Write table
     con.execute("""
         CREATE OR REPLACE TABLE question_correlations (
@@ -607,22 +606,21 @@ def _(con, FSQ, mo):
         "INSERT INTO question_correlations VALUES (?, ?, ?, ?)",
         corr_rows,
     )
-    
+
     n_corr = len(corr_rows)
     mo.md(f"**✓ question_correlations created**: {n_corr:,} rows")
-    
-    return con
+    return
 
 
 @app.cell
-def _(con, FSQ, mo):
+def _(FSQ, con, mo):
     """
     ### Create chi_square_results table
-    
+
     Chi-square test on answer1-5 distribution between 2019 and 2024 (Python-side with scipy).
     """
     from scipy.stats import chi2_contingency
-    
+
     rows = con.execute(f"""
         SELECT QUESTION, SURVEYR,
                answer1, answer2, answer3, answer4, answer5,
@@ -633,7 +631,7 @@ def _(con, FSQ, mo):
           AND SURVEYR IN (2019, 2024)
         ORDER BY QUESTION, SURVEYR
     """).fetchall()
-    
+
     # Fetch indicator labels
     labels = {
         q: (ie, se)
@@ -644,14 +642,14 @@ def _(con, FSQ, mo):
               AND QUESTION NOT LIKE 'Q73%'
         """).fetchall()
     }
-    
+
     # Collect per-question rows for each year: store (pcts, anscount)
     data = {}
     for q, year, a1, a2, a3, a4, a5, anscount in rows:
         if q not in data:
             data[q] = {"years": {}}
         data[q]["years"][year] = ([a1, a2, a3, a4, a5], anscount)
-    
+
     chi_rows = []
     for q, info in sorted(data.items()):
         yr = info["years"]
@@ -672,19 +670,19 @@ def _(con, FSQ, mo):
             continue
         ind_eng, sub_eng = labels.get(q, ("", ""))
         try:
-            chi2, _p_chi, dof, _ = chi2_contingency([counts_2019, counts_2024])
+            chi2, p_chi, dof, _ = chi2_contingency([counts_2019, counts_2024])
             chi_rows.append((
                 q,
                 ind_eng,
                 sub_eng,
                 float(chi2),
-                float(_p_chi),
+                float(p_chi),
                 int(dof),
-                bool(p < 0.05),
+                bool(p_chi < 0.05),
             ))
         except Exception:
             pass
-    
+
     con.execute("""
         CREATE OR REPLACE TABLE chi_square_results (
             QUESTION        VARCHAR,
@@ -696,22 +694,25 @@ def _(con, FSQ, mo):
             significant     BOOLEAN
         )
     """)
-    con.executemany(
-        "INSERT INTO chi_square_results VALUES (?, ?, ?, ?, ?, ?, ?)",
-        chi_rows,
-    )
-    
+
+    if chi_rows:
+        con.executemany(
+            "INSERT INTO chi_square_results VALUES (?, ?, ?, ?, ?, ?, ?)",
+            chi_rows,
+        )
+    else:
+        mo.md("**Note**: No questions met the criteria for chi-square testing. chi_square_results remain empty.")
+
     n_chi = len(chi_rows)
     mo.md(f"**✓ chi_square_results created**: {n_chi} rows")
-    
-    return con
+    return
 
 
 @app.cell
 def _(con, mo):
     """
     ## Step 5: Pipeline Validation & Summary
-    
+
     ### Description
     Verify all tables were created successfully and display summary statistics.
     """
@@ -721,12 +722,12 @@ def _(con, mo):
         "theme_scores", "yoy_changes",
         "question_correlations", "chi_square_results"
     ]
-    
+
     mo.md("**=== PIPELINE COMPLETE ===\n")
     mo.md("**Table Summary:**")
     mo.md("| Table | Rows | Description |")
     mo.md("|-------|------|-------------|")
-    
+
     for table in tables:
         count = con.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
         desc = {
@@ -742,12 +743,11 @@ def _(con, mo):
             "chi_square_results": "Chi-square 2019 vs 2024 per question",
         }[table]
         mo.md(f"| `{table}` | {count:,} | {desc} |")
-    
+
     con.close()
-    
+
     mo.md("\n**✓ All tables created successfully!**")
     mo.md("\n**Next Steps:** Run `02_exploration.py` to analyze the data.")
-    
     return
 
 
