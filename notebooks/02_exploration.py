@@ -4,9 +4,9 @@ __generated_with = "0.23.4"
 app = marimo.App(width="columns")
 
 
-@app.cell
-def _():
-    """
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
     # PSES Data Exploration & Analysis
 
     ## Overview
@@ -25,32 +25,57 @@ def _():
     **Prerequisite**: Run `01_data_engineering.py` first to build the analytical tables.
 
     **Database**: `data/pses.duckdb` (read-only mode)
-    """
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+
     import marimo as mo
     import duckdb
     import polars as pl
     import altair as alt
     from pathlib import Path
 
+
+    return Path, alt, duckdb, mo, pl
+
+
+@app.cell(hide_code=True)
+def _(Path, duckdb):
+
     db_path = str(Path("data") / "pses.duckdb")
     con = duckdb.connect(db_path, read_only=True)
 
-    return alt, con, mo, pl
+    return (con,)
 
 
-@app.cell
-def _(con, mo):
-    """
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
     ## Controls
 
     ### Theme Selector
     Select which organizational theme to analyze.
-    """
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(con):
+
     _theme_df = con.execute("""
         SELECT DISTINCT INDICATORENG, INDICATORID
         FROM indicator_map
         ORDER BY INDICATORID
     """).pl()
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
 
     _theme_options = {
         row["INDICATORENG"]: row["INDICATORENG"]
@@ -63,33 +88,53 @@ def _(con, mo):
         label="Theme",
     )
     theme_selector
+
     return (theme_selector,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
-    """
+    mo.md("""
     ### Year Selector
     Select which survey years to include in the visualization.
-    """
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+
     year_selector = mo.ui.multiselect(
         options=["2019", "2020", "2022", "2024"],
         value=["2019", "2020", "2022", "2024"],
         label="Survey years",
     )
     year_selector
+
     return (year_selector,)
 
 
-@app.cell
-def _(con, theme_selector, year_selector):
-    """
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
     ## Theme Score Trend Data
 
     Query the theme_scores table for the selected theme and years.
     This data powers the trend line chart.
-    """
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(year_selector):
+
     _selected_years = [int(y) for y in year_selector.value]
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(con, theme_selector):
 
     theme_trend_df = con.execute("""
         SELECT
@@ -105,18 +150,23 @@ def _(con, theme_selector, year_selector):
         ORDER BY ts.SUBINDICATORID, ts.SURVEYR
     """, [theme_selector.value, _selected_years]).pl()
 
-    theme_trend_df
     return (theme_trend_df,)
 
 
-@app.cell
-def _(alt, mo, theme_selector, theme_trend_df):
-    """
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
     ## Trend Line Chart
 
     Line chart showing subtheme scores over time for the selected theme.
     Each line represents a subtheme, with points at each survey year.
-    """
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(alt, mo, theme_selector, theme_trend_df):
+
     _base = alt.Chart(theme_trend_df).encode(
         x=alt.X(
             "SURVEYR:O",
@@ -151,19 +201,26 @@ def _(alt, mo, theme_selector, theme_trend_df):
     )
 
     mo.ui.altair_chart(_chart)
+
     return
 
 
-@app.cell
-def _(alt, con, mo, theme_selector):
-    """
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
     ## Year-over-Year Delta Heatmap
 
     Heatmap showing the change in scores between survey cycles.
     Each cell represents the delta from one year to the next for a subtheme.
 
     **Color Scale**: Red = decline, Green = improvement, centered at 0.
-    """
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(con, theme_selector):
+
     _yoy_df = con.execute("""
         SELECT
             yc.SUBINDICATORENG,
@@ -178,6 +235,12 @@ def _(alt, con, mo, theme_selector):
         WHERE yc.INDICATORENG = ?
         ORDER BY im.SUBINDICATORID, yc.year_from
     """, [theme_selector.value]).pl()
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(alt, mo, theme_selector):
 
     _heatmap = (
         alt.Chart(_yoy_df)
@@ -233,17 +296,24 @@ def _(alt, con, mo, theme_selector):
     )
 
     mo.ui.altair_chart(_heatmap_with_text)
+
     return
 
 
-@app.cell
-def _(con, mo, pl, theme_selector):
-    """
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
     ## Chi-Square Significance Table
 
     Table showing chi-square test results for 2019 vs 2024 comparison.
     Select a question to drill down into its response distribution.
-    """
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(con, theme_selector):
+
     _chi_df = con.execute("""
         SELECT
             cr.QUESTION,
@@ -264,6 +334,12 @@ def _(con, mo, pl, theme_selector):
         ORDER BY cr.chi2 DESC
     """, [theme_selector.value]).pl()
 
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, pl):
+
     chi_table = mo.ui.table(
         _chi_df.select([
             pl.col("QUESTION"),
@@ -277,16 +353,24 @@ def _(con, mo, pl, theme_selector):
         label="Chi-square results (2019 vs 2024) - Select a question to drill down",
     )
     chi_table
+
     return (chi_table,)
 
 
-@app.cell
-def _(chi_table, mo):
-    """
-    ## Question Selection Guard
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ## Question Drill-Down
 
+    ### Selection Guard
     Show message if no question is selected from the chi-square table.
-    """
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(chi_table, mo):
+
     mo.stop(
         len(chi_table.value) == 0,
         mo.md("*Select a question from the table above to see the response distribution.*")
@@ -294,17 +378,24 @@ def _(chi_table, mo):
 
     selected_question = chi_table.value["QUESTION"][0]
     selected_title = chi_table.value["Question text"][0]
+
     return selected_question, selected_title
 
 
-@app.cell
-def _(alt, con, mo, selected_question, selected_title):
-    """
-    ## Question Response Distribution
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Question Response Distribution
 
-    Bar chart showing the response distribution (Positive/Neutral/Negative) 
+    Bar chart showing the response distribution (Positive/Neutral/Negative)
     for the selected question, comparing 2019 and 2024 side by side.
-    """
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(con, selected_question):
+
     _dist_df = con.execute("""
         SELECT
             SURVEYR,
@@ -317,6 +408,12 @@ def _(alt, con, mo, selected_question, selected_title):
         WHERE QUESTION = ?
           AND SURVEYR IN (2019, 2024)
     """, [selected_question]).pl().unnest("r")
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(alt, mo, selected_question, selected_title):
 
     _dist_chart = (
         alt.Chart(_dist_df)
@@ -358,16 +455,23 @@ def _(alt, con, mo, selected_question, selected_title):
     )
 
     mo.ui.altair_chart(_dist_chart)
+
     return
 
 
-@app.cell
-def _(con, mo, theme_selector):
-    """
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
     ## Narrative Summary
 
     Plain-language summary of findings for the selected theme, suitable for leadership audiences.
-    """
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(con, theme_selector):
+
     _summary_df = con.execute("""
         WITH ranked AS (
             SELECT
@@ -382,6 +486,12 @@ def _(con, mo, theme_selector):
         SELECT * FROM ranked WHERE rank <= 3
     """, [theme_selector.value]).pl()
 
+    return
+
+
+@app.cell(hide_code=True)
+def _(con, theme_selector):
+
     _scores_df = con.execute("""
         SELECT
             ts.SUBINDICATORENG,
@@ -393,6 +503,12 @@ def _(con, mo, theme_selector):
         GROUP BY ts.SUBINDICATORENG
         ORDER BY score_2024 ASC
     """, [theme_selector.value]).pl()
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, theme_selector):
 
     _worst_subtheme = _summary_df["SUBINDICATORENG"][0]
     _worst_delta = _summary_df["delta"][0]
@@ -426,6 +542,7 @@ def _(con, mo, theme_selector):
     > **Note:** Statistical significance is expected at this sample size. Use the magnitude
     > of change, not the p-value, as the primary indicator of policy relevance.
     """)
+
     return
 
 
