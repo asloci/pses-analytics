@@ -145,6 +145,3 @@ This notebook provides:
 - **Pearson Correlations**: With n=4 years, r values are unreliable for causal inference. Use for identifying question clusters only.
 - **Mean Scores**: Simple AVG(SCORE100) across questions in a subtheme per year.
 
-## License
-
-This project is for Government of Canada internal use.
