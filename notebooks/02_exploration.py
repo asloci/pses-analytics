@@ -8,12 +8,12 @@ app = marimo.App(width="columns")
 def _():
     """
     # PSES Data Exploration & Analysis
-    
+
     ## Overview
-    
+
     This notebook provides an interactive exploration interface for the PSES analytical dataset.
     It connects to the DuckDB database created by `01_data_engineering.py` and provides:
-    
+
     - **Theme Selection**: Choose which organizational theme to analyze
     - **Year Selection**: Filter by survey year(s)
     - **Trend Visualization**: Line charts showing subtheme scores over time
@@ -21,9 +21,9 @@ def _():
     - **Statistical Significance**: Chi-square test results table
     - **Question Drill-Down**: Deep dive into individual question response distributions
     - **Narrative Summary**: Plain-language findings for leadership audiences
-    
+
     **Prerequisite**: Run `01_data_engineering.py` first to build the analytical tables.
-    
+
     **Database**: `data/pses.duckdb` (read-only mode)
     """
     import marimo as mo
@@ -31,10 +31,10 @@ def _():
     import polars as pl
     import altair as alt
     from pathlib import Path
-    
+
     db_path = str(Path("data") / "pses.duckdb")
     con = duckdb.connect(db_path, read_only=True)
-    
+
     return alt, con, mo, pl
 
 
@@ -42,7 +42,7 @@ def _():
 def _(con, mo):
     """
     ## Controls
-    
+
     ### Theme Selector
     Select which organizational theme to analyze.
     """
@@ -82,10 +82,10 @@ def _(mo):
 
 
 @app.cell
-def _(con, mo, theme_selector, year_selector):
+def _(con, theme_selector, year_selector):
     """
     ## Theme Score Trend Data
-    
+
     Query the theme_scores table for the selected theme and years.
     This data powers the trend line chart.
     """
@@ -113,7 +113,7 @@ def _(con, mo, theme_selector, year_selector):
 def _(alt, mo, theme_selector, theme_trend_df):
     """
     ## Trend Line Chart
-    
+
     Line chart showing subtheme scores over time for the selected theme.
     Each line represents a subtheme, with points at each survey year.
     """
@@ -158,10 +158,10 @@ def _(alt, mo, theme_selector, theme_trend_df):
 def _(alt, con, mo, theme_selector):
     """
     ## Year-over-Year Delta Heatmap
-    
+
     Heatmap showing the change in scores between survey cycles.
     Each cell represents the delta from one year to the next for a subtheme.
-    
+
     **Color Scale**: Red = decline, Green = improvement, centered at 0.
     """
     _yoy_df = con.execute("""
@@ -240,7 +240,7 @@ def _(alt, con, mo, theme_selector):
 def _(con, mo, pl, theme_selector):
     """
     ## Chi-Square Significance Table
-    
+
     Table showing chi-square test results for 2019 vs 2024 comparison.
     Select a question to drill down into its response distribution.
     """
@@ -284,7 +284,7 @@ def _(con, mo, pl, theme_selector):
 def _(chi_table, mo):
     """
     ## Question Selection Guard
-    
+
     Show message if no question is selected from the chi-square table.
     """
     mo.stop(
@@ -294,7 +294,6 @@ def _(chi_table, mo):
 
     selected_question = chi_table.value["QUESTION"][0]
     selected_title = chi_table.value["Question text"][0]
-
     return selected_question, selected_title
 
 
@@ -302,7 +301,7 @@ def _(chi_table, mo):
 def _(alt, con, mo, selected_question, selected_title):
     """
     ## Question Response Distribution
-    
+
     Bar chart showing the response distribution (Positive/Neutral/Negative) 
     for the selected question, comparing 2019 and 2024 side by side.
     """
@@ -366,7 +365,7 @@ def _(alt, con, mo, selected_question, selected_title):
 def _(con, mo, theme_selector):
     """
     ## Narrative Summary
-    
+
     Plain-language summary of findings for the selected theme, suitable for leadership audiences.
     """
     _summary_df = con.execute("""
