@@ -60,23 +60,23 @@ def _(mo):
 
 @app.cell
 def _(con):
-    _theme_df = con.execute("""
+    theme_df = con.execute("""
         SELECT DISTINCT INDICATORENG, INDICATORID
         FROM indicator_map
         ORDER BY INDICATORID
     """).pl()
-    return
+    return (theme_df,)
 
 
 @app.cell
-def _(mo):
-    _theme_options = {
+def _(mo, theme_df):
+    theme_options = {
         row["INDICATORENG"]: row["INDICATORENG"]
-        for row in _theme_df.iter_rows(named=True)
+        for row in theme_df.iter_rows(named=True)
     }
     theme_selector = mo.ui.dropdown(
-        options=_theme_options,
-        value=list(_theme_options.keys())[0],
+        options=theme_options,
+        value=list(theme_options.keys())[0],
         label="Theme",
     )
     return (theme_selector,)
@@ -114,12 +114,12 @@ def _(mo):
 
 @app.cell
 def _(year_selector):
-    _selected_years = [int(y) for y in year_selector.value]
-    return
+    selected_years = [int(y) for y in year_selector.value]
+    return (selected_years,)
 
 
 @app.cell
-def _(con, theme_selector):
+def _(con, selected_years, theme_selector):
     theme_trend_df = con.execute("""
         SELECT
             ts.SURVEYR,
@@ -132,7 +132,7 @@ def _(con, theme_selector):
         WHERE im.INDICATORENG = ?
           AND ts.SURVEYR IN (SELECT UNNEST(?::INTEGER[]))
         ORDER BY ts.SUBINDICATORID, ts.SURVEYR
-    """, [theme_selector.value, _selected_years]).pl()
+    """, [theme_selector.value, selected_years]).pl()
     return (theme_trend_df,)
 
 
@@ -149,7 +149,7 @@ def _(mo):
 
 @app.cell
 def _(alt, mo, theme_selector, theme_trend_df):
-    _base = alt.Chart(theme_trend_df).encode(
+    base = alt.Chart(theme_trend_df).encode(
         x=alt.X(
             "SURVEYR:O",
             title="Survey year",
@@ -172,8 +172,8 @@ def _(alt, mo, theme_selector, theme_trend_df):
         ],
     )
 
-    _chart = (
-        _base.mark_line(point=True, strokeWidth=2)
+    chart = (
+        base.mark_line(point=True, strokeWidth=2)
         .properties(
             title=f"Subtheme scores over time — {theme_selector.value}",
             width=600,
@@ -182,7 +182,7 @@ def _(alt, mo, theme_selector, theme_trend_df):
         .interactive()
     )
 
-    mo.ui.altair_chart(_chart)
+    mo.ui.altair_chart(chart)
     return
 
 
@@ -201,7 +201,7 @@ def _(mo):
 
 @app.cell
 def _(con, theme_selector):
-    _yoy_df = con.execute("""
+    yoy_df = con.execute("""
         SELECT
             yc.SUBINDICATORENG,
             yc.year_from,
@@ -215,13 +215,13 @@ def _(con, theme_selector):
         WHERE yc.INDICATORENG = ?
         ORDER BY im.SUBINDICATORID, yc.year_from
     """, [theme_selector.value]).pl()
-    return
+    return (yoy_df,)
 
 
 @app.cell
-def _(alt, mo, theme_selector):
-    _heatmap = (
-        alt.Chart(_yoy_df)
+def _(alt, mo, theme_selector, yoy_df):
+    heatmap = (
+        alt.Chart(yoy_df)
         .mark_rect()
         .encode(
             x=alt.X(
@@ -231,7 +231,7 @@ def _(alt, mo, theme_selector):
             ),
             y=alt.Y(
                 "SUBINDICATORENG:N",
-                sort=_yoy_df["SUBINDICATORENG"].to_list(),
+                sort=yoy_df["SUBINDICATORENG"].to_list(),
             ),
             color=alt.Color(
                 "delta:Q",
@@ -255,8 +255,8 @@ def _(alt, mo, theme_selector):
         )
     )
 
-    _heatmap_with_text = _heatmap + (
-        alt.Chart(_yoy_df)
+    heatmap_with_text = heatmap + (
+        alt.Chart(yoy_df)
         .mark_text(fontSize=11, fontWeight="bold")
         .encode(
             x=alt.X("period:O", sort=["2019→2020", "2020→2022", "2022→2024"]),
@@ -273,7 +273,7 @@ def _(alt, mo, theme_selector):
         )
     )
 
-    mo.ui.altair_chart(_heatmap_with_text)
+    mo.ui.altair_chart(heatmap_with_text)
     return
 
 
@@ -290,7 +290,7 @@ def _(mo):
 
 @app.cell
 def _(con, theme_selector):
-    _chi_df = con.execute("""
+    chi_df = con.execute("""
         SELECT
             cr.QUESTION,
             cr.SUBINDICATORENG,
@@ -309,13 +309,13 @@ def _(con, theme_selector):
             cr.chi2, cr.p_value, cr.dof, cr.significant
         ORDER BY cr.chi2 DESC
     """, [theme_selector.value]).pl()
-    return
+    return (chi_df,)
 
 
 @app.cell
-def _(mo, pl):
+def _(chi_df, mo, pl):
     chi_table = mo.ui.table(
-        _chi_df.select([
+        chi_df.select([
             pl.col("QUESTION"),
             pl.col("TITLE_E").alias("Question text"),
             pl.col("SUBINDICATORENG").alias("Subtheme"),
@@ -364,7 +364,7 @@ def _(mo):
 
 @app.cell
 def _(con, selected_question):
-    _dist_df = con.execute("""
+    dist_df = con.execute("""
         SELECT
             SURVEYR,
             UNNEST([
@@ -376,13 +376,13 @@ def _(con, selected_question):
         WHERE QUESTION = ?
           AND SURVEYR IN (2019, 2024)
     """, [selected_question]).pl().unnest("r")
-    return
+    return (dist_df,)
 
 
 @app.cell
-def _(alt, mo, selected_question, selected_title):
-    _dist_chart = (
-        alt.Chart(_dist_df)
+def _(alt, dist_df, mo, selected_question, selected_title):
+    dist_chart = (
+        alt.Chart(dist_df)
         .mark_bar()
         .encode(
             x=alt.X(
@@ -420,7 +420,7 @@ def _(alt, mo, selected_question, selected_title):
         )
     )
 
-    mo.ui.altair_chart(_dist_chart)
+    mo.ui.altair_chart(dist_chart)
     return
 
 
@@ -436,7 +436,7 @@ def _(mo):
 
 @app.cell
 def _(con, theme_selector):
-    _summary_df = con.execute("""
+    summary_df = con.execute("""
         WITH ranked AS (
             SELECT
                 SUBINDICATORENG,
@@ -449,12 +449,12 @@ def _(con, theme_selector):
         )
         SELECT * FROM ranked WHERE rank <= 3
     """, [theme_selector.value]).pl()
-    return
+    return (summary_df,)
 
 
 @app.cell
 def _(con, theme_selector):
-    _scores_df = con.execute("""
+    scores_df = con.execute("""
         SELECT
             ts.SUBINDICATORENG,
             MAX(CASE WHEN SURVEYR = 2019 THEN mean_score END) AS score_2019,
@@ -465,37 +465,37 @@ def _(con, theme_selector):
         GROUP BY ts.SUBINDICATORENG
         ORDER BY score_2024 ASC
     """, [theme_selector.value]).pl()
-    return
+    return (scores_df,)
 
 
 @app.cell
-def _(mo, theme_selector):
-    _worst_subtheme = _summary_df["SUBINDICATORENG"][0]
-    _worst_delta = _summary_df["delta"][0]
-    _lowest_score = _scores_df["score_2024"][0]
-    _lowest_name = _scores_df["SUBINDICATORENG"][0]
+def _(mo, scores_df, summary_df, theme_selector):
+    worst_subtheme = summary_df["SUBINDICATORENG"][0]
+    worst_delta = summary_df["delta"][0]
+    lowest_score = scores_df["score_2024"][0]
+    lowest_name = scores_df["SUBINDICATORENG"][0]
 
-    _bullet_lines = "\n".join([
+    bullet_lines = "\n".join([
         f"- **{row['SUBINDICATORENG']}**: {row['delta']:+.1f} points (2022 to 2024)"
-        for row in _summary_df.iter_rows(named=True)
+        for row in summary_df.iter_rows(named=True)
     ])
 
     mo.md(f"""
     ## {theme_selector.value} — Summary for Leadership
 
     All subthemes under **{theme_selector.value}** declined between 2022 and 2024.
-    The steepest drop was in **{_worst_subtheme}** ({_worst_delta:+.1f} points),
-    and the lowest-scoring subtheme in 2024 is **{_lowest_name}**
-    ({_lowest_score:.1f} / 100).
+    The steepest drop was in **{worst_subtheme}** ({worst_delta:+.1f} points),
+    and the lowest-scoring subtheme in 2024 is **{lowest_name}**
+    ({lowest_score:.1f} / 100).
 
     ### Largest declines (2022 to 2024)
 
-    {_bullet_lines}
+    {bullet_lines}
 
     ### What this means
 
     Scores represent the percentage of respondents giving a positive or neutral response,
-    expressed on a 0-100 scale. A decline of {abs(_worst_delta):.1f} points in a single
+    expressed on a 0-100 scale. A decline of {abs(worst_delta):.1f} points in a single
     survey cycle — with ~186,000 respondents — is both statistically significant and
     operationally meaningful.
 
