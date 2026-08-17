@@ -4,7 +4,7 @@ __generated_with = "0.23.4"
 app = marimo.App(width="columns")
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     # PSES Data Exploration & Analysis
@@ -29,29 +29,25 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _():
-
     import marimo as mo
     import duckdb
     import polars as pl
     import altair as alt
     from pathlib import Path
 
-
     return Path, alt, duckdb, mo, pl
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(Path, duckdb):
-
     db_path = str(Path("data") / "pses.duckdb")
     con = duckdb.connect(db_path, read_only=True)
-
     return (con,)
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     ## Controls
@@ -62,37 +58,31 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(con):
-
     _theme_df = con.execute("""
         SELECT DISTINCT INDICATORENG, INDICATORID
         FROM indicator_map
         ORDER BY INDICATORID
     """).pl()
-
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
-
     _theme_options = {
         row["INDICATORENG"]: row["INDICATORENG"]
         for row in _theme_df.iter_rows(named=True)
     }
-
     theme_selector = mo.ui.dropdown(
         options=_theme_options,
         value=list(_theme_options.keys())[0],
         label="Theme",
     )
-    theme_selector
-
     return (theme_selector,)
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     ### Year Selector
@@ -101,20 +91,17 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
-
     year_selector = mo.ui.multiselect(
         options=["2019", "2020", "2022", "2024"],
         value=["2019", "2020", "2022", "2024"],
         label="Survey years",
     )
-    year_selector
-
     return (year_selector,)
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     ## Theme Score Trend Data
@@ -125,17 +112,14 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(year_selector):
-
     _selected_years = [int(y) for y in year_selector.value]
-
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(con, theme_selector):
-
     theme_trend_df = con.execute("""
         SELECT
             ts.SURVEYR,
@@ -149,11 +133,10 @@ def _(con, theme_selector):
           AND ts.SURVEYR IN (SELECT UNNEST(?::INTEGER[]))
         ORDER BY ts.SUBINDICATORID, ts.SURVEYR
     """, [theme_selector.value, _selected_years]).pl()
-
     return (theme_trend_df,)
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     ## Trend Line Chart
@@ -164,9 +147,8 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(alt, mo, theme_selector, theme_trend_df):
-
     _base = alt.Chart(theme_trend_df).encode(
         x=alt.X(
             "SURVEYR:O",
@@ -201,11 +183,10 @@ def _(alt, mo, theme_selector, theme_trend_df):
     )
 
     mo.ui.altair_chart(_chart)
-
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     ## Year-over-Year Delta Heatmap
@@ -218,9 +199,8 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(con, theme_selector):
-
     _yoy_df = con.execute("""
         SELECT
             yc.SUBINDICATORENG,
@@ -235,13 +215,11 @@ def _(con, theme_selector):
         WHERE yc.INDICATORENG = ?
         ORDER BY im.SUBINDICATORID, yc.year_from
     """, [theme_selector.value]).pl()
-
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(alt, mo, theme_selector):
-
     _heatmap = (
         alt.Chart(_yoy_df)
         .mark_rect()
@@ -296,11 +274,10 @@ def _(alt, mo, theme_selector):
     )
 
     mo.ui.altair_chart(_heatmap_with_text)
-
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     ## Chi-Square Significance Table
@@ -311,9 +288,8 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(con, theme_selector):
-
     _chi_df = con.execute("""
         SELECT
             cr.QUESTION,
@@ -333,13 +309,11 @@ def _(con, theme_selector):
             cr.chi2, cr.p_value, cr.dof, cr.significant
         ORDER BY cr.chi2 DESC
     """, [theme_selector.value]).pl()
-
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo, pl):
-
     chi_table = mo.ui.table(
         _chi_df.select([
             pl.col("QUESTION"),
@@ -352,12 +326,10 @@ def _(mo, pl):
         selection="single",
         label="Chi-square results (2019 vs 2024) - Select a question to drill down",
     )
-    chi_table
-
     return (chi_table,)
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     ## Question Drill-Down
@@ -368,21 +340,18 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(chi_table, mo):
-
     mo.stop(
         len(chi_table.value) == 0,
         mo.md("*Select a question from the table above to see the response distribution.*")
     )
-
     selected_question = chi_table.value["QUESTION"][0]
     selected_title = chi_table.value["Question text"][0]
-
     return selected_question, selected_title
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     ### Question Response Distribution
@@ -393,9 +362,8 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(con, selected_question):
-
     _dist_df = con.execute("""
         SELECT
             SURVEYR,
@@ -408,13 +376,11 @@ def _(con, selected_question):
         WHERE QUESTION = ?
           AND SURVEYR IN (2019, 2024)
     """, [selected_question]).pl().unnest("r")
-
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(alt, mo, selected_question, selected_title):
-
     _dist_chart = (
         alt.Chart(_dist_df)
         .mark_bar()
@@ -455,11 +421,10 @@ def _(alt, mo, selected_question, selected_title):
     )
 
     mo.ui.altair_chart(_dist_chart)
-
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     ## Narrative Summary
@@ -469,9 +434,8 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(con, theme_selector):
-
     _summary_df = con.execute("""
         WITH ranked AS (
             SELECT
@@ -485,13 +449,11 @@ def _(con, theme_selector):
         )
         SELECT * FROM ranked WHERE rank <= 3
     """, [theme_selector.value]).pl()
-
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(con, theme_selector):
-
     _scores_df = con.execute("""
         SELECT
             ts.SUBINDICATORENG,
@@ -503,13 +465,11 @@ def _(con, theme_selector):
         GROUP BY ts.SUBINDICATORENG
         ORDER BY score_2024 ASC
     """, [theme_selector.value]).pl()
-
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo, theme_selector):
-
     _worst_subtheme = _summary_df["SUBINDICATORENG"][0]
     _worst_delta = _summary_df["delta"][0]
     _lowest_score = _scores_df["score_2024"][0]
@@ -542,7 +502,6 @@ def _(mo, theme_selector):
     > **Note:** Statistical significance is expected at this sample size. Use the magnitude
     > of change, not the p-value, as the primary indicator of policy relevance.
     """)
-
     return
 
 
