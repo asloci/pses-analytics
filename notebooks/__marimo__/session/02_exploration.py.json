@@ -7,12 +7,12 @@
   "cells": [
     {
       "id": "Hbol",
-      "code_hash": "e9b872e4a82540ff8e04e3af506346e5",
+      "code_hash": "e444038a55f320cc3256464ad1ecbd16",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/plain": ""
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"pses-data-exploration-analysis\">PSES Data Exploration &amp; Analysis</h1>\n<h2 id=\"overview\">Overview</h2>\n<span class=\"paragraph\">This notebook provides an interactive exploration interface for the PSES analytical dataset.\nIt connects to the DuckDB database created by <code>01_data_engineering.py</code> and provides:</span>\n<ul>\n<li><strong>Theme Selection</strong>: Choose which organizational theme to analyze</li>\n<li><strong>Year Selection</strong>: Filter by survey year(s)</li>\n<li><strong>Trend Visualization</strong>: Line charts showing subtheme scores over time</li>\n<li><strong>Change Analysis</strong>: Heatmap of year-over-year score changes</li>\n<li><strong>Statistical Significance</strong>: Chi-square test results table</li>\n<li><strong>Question Drill-Down</strong>: Deep dive into individual question response distributions</li>\n<li><strong>Narrative Summary</strong>: Plain-language findings for leadership audiences</li>\n</ul>\n<span class=\"paragraph\"><strong>Prerequisite</strong>: Run <code>01_data_engineering.py</code> first to build the analytical tables.</span>\n<span class=\"paragraph\"><strong>Database</strong>: <code>data/pses.duckdb</code> (read-only mode)</span></span>"
           }
         }
       ],
@@ -20,71 +20,7 @@
     },
     {
       "id": "MJUe",
-      "code_hash": "94d49af415ca4003532358f7edabfbd4",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<marimo-ui-element object-id='MJUe-0' random-id='510b46eb-fe1f-2288-307b-e9af0022377c'><marimo-dropdown data-initial-value='[&quot;Employee engagement&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Theme&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;Employee engagement&quot;,&quot;Leadership&quot;,&quot;Workforce&quot;,&quot;Workplace&quot;,&quot;Workplace well-being&quot;,&quot;Compensation&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false'></marimo-dropdown></marimo-ui-element>"
-          }
-        }
-      ],
-      "console": []
-    },
-    {
-      "id": "vblA",
-      "code_hash": "c748b9b22d64c6d1c38f45b32c76329a",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<marimo-ui-element object-id='vblA-0' random-id='45766b9d-7f66-d0e6-6a1b-e925d9c1b22a'><marimo-multiselect data-initial-value='[&quot;2019&quot;,&quot;2020&quot;,&quot;2022&quot;,&quot;2024&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Survey years&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;2019&quot;,&quot;2020&quot;,&quot;2022&quot;,&quot;2024&quot;]' data-full-width='false'></marimo-multiselect></marimo-ui-element>"
-          }
-        }
-      ],
-      "console": []
-    },
-    {
-      "id": "bkHC",
-      "code_hash": "2e03954bb037afa6acf8557f7c43ab10",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<marimo-ui-element object-id='bkHC-0' random-id='0a40aea9-d15b-6a00-50ae-39a71cb876bc'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;SURVEYR&#92;&quot;:2019,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Performance management&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:4,&#92;&quot;mean_score&#92;&quot;:70.66666666666667},{&#92;&quot;SURVEYR&#92;&quot;:2020,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Performance management&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:4,&#92;&quot;mean_score&#92;&quot;:73.33333333333333},{&#92;&quot;SURVEYR&#92;&quot;:2022,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Performance management&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:4,&#92;&quot;mean_score&#92;&quot;:74.33333333333333},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Performance management&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:4,&#92;&quot;mean_score&#92;&quot;:72.0},{&#92;&quot;SURVEYR&#92;&quot;:2019,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Job fit and development&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:5,&#92;&quot;mean_score&#92;&quot;:61.666666666666664},{&#92;&quot;SURVEYR&#92;&quot;:2020,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Job fit and development&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:5,&#92;&quot;mean_score&#92;&quot;:65.33333333333333},{&#92;&quot;SURVEYR&#92;&quot;:2022,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Job fit and development&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:5,&#92;&quot;mean_score&#92;&quot;:65.66666666666667},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Job fit and development&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:5,&#92;&quot;mean_score&#92;&quot;:60.666666666666664},{&#92;&quot;SURVEYR&#92;&quot;:2019,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Empowerment&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:6,&#92;&quot;mean_score&#92;&quot;:69.0},{&#92;&quot;SURVEYR&#92;&quot;:2020,&#92;&quot;SUBINDICATORENG&#92;&quot;:&#92;&quot;Empowerment&#92;&quot;,&#92;&quot;SUBINDICATORID&#92;&quot;:6,&#92;&quot;mean_score&#92;&quot;:71.25}]&quot;' data-total-rows='16' data-total-columns='4' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;SURVEYR&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;SUBINDICATORENG&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;SUBINDICATORID&quot;,[&quot;integer&quot;,&quot;i64&quot;]],[&quot;mean_score&quot;,[&quot;number&quot;,&quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-show-data-types='true' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
-          }
-        }
-      ],
-      "console": []
-    },
-    {
-      "id": "lEQa",
-      "code_hash": "526442dec4791a97354bebcb4121c525",
-      "outputs": [],
-      "console": []
-    },
-    {
-      "id": "PKri",
-      "code_hash": "788b15f430e57926878557a3e2a15497",
-      "outputs": [],
-      "console": []
-    },
-    {
-      "id": "Xref",
-      "code_hash": "8f81cb0b699ffcb0ff59ff2aac7aa4a1",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<marimo-ui-element object-id='Xref-0' random-id='ebbfe41f-2696-7b87-8f8d-6d5cd2713bda'><marimo-table data-initial-value='[]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Chi-square results (2019 vs 2024) - Select a question to drill down&lt;/span&gt;&lt;/span&gt;&quot;' data-data='&quot;[{&#92;&quot;_marimo_row_id&#92;&quot;:0,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q07&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 7. I have support at work to balance my work and personal life.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Work-life balance and workload&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:4563.1,&#92;&quot;p-value&#92;&quot;:0.0,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:1,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q45&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 45. I believe I have opportunities for promotion within my department or agency, given my education, skills and experience.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Job fit and development&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:1587.7,&#92;&quot;p-value&#92;&quot;:0.0,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:2,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q10&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 10. I have clear work objectives.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Performance management&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:1541.7,&#92;&quot;p-value&#92;&quot;:0.0,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:3,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q27&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 27. I receive useful feedback from my immediate supervisor on my job performance.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Performance management&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:1375.2,&#92;&quot;p-value&#92;&quot;:1.623861370342216e-296,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:4,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q14&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 14. I have opportunities to provide input into decisions that affect my work.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Empowerment&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:1138.8,&#92;&quot;p-value&#92;&quot;:2.9658309153638992e-245,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:5,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q16&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 16. I have support at work to provide a high level of service.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Empowerment&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:1035.3,&#92;&quot;p-value&#92;&quot;:7.864108308515777e-223,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:6,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q46&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 46. I feel I would be supported by my department or agency if I proposed a new idea.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Empowerment&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:989.3,&#92;&quot;p-value&#92;&quot;:7.541411240741072e-213,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:7,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q09&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 9. I receive meaningful recognition for work well done.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Performance management&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:855.2,&#92;&quot;p-value&#92;&quot;:8.394872380543265e-184,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:8,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q18&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 18. I can complete my assigned workload during my regular working hours.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Work-life balance and workload&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:553.8,&#92;&quot;p-value&#92;&quot;:1.5518520296736044e-118,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:9,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q43&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 43. My department or agency does a good job of supporting employee career development.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Job fit and development&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:432.8,&#92;&quot;p-value&#92;&quot;:2.2590878778805292e-92,&#92;&quot;Significant&#92;&quot;:true}]&quot;' data-total-rows='12' data-total-columns='6' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;QUESTION&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;Question text&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;Subtheme&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;Chi-squared&quot;,[&quot;number&quot;,&quot;f64&quot;]],[&quot;p-value&quot;,[&quot;number&quot;,&quot;f64&quot;]],[&quot;Significant&quot;,[&quot;boolean&quot;,&quot;bool&quot;]]]' data-selection='&quot;single&quot;' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-show-data-types='true' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-has-stable-row-id='true' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
-          }
-        }
-      ],
-      "console": []
-    },
-    {
-      "id": "SFPL",
-      "code_hash": "80354d6fac9d9fe348d9ec2568c00068",
+      "code_hash": "5b3984947e254748fb8c606f76279abd",
       "outputs": [
         {
           "type": "data",
@@ -96,14 +32,312 @@
       "console": []
     },
     {
+      "id": "vblA",
+      "code_hash": "24da9d4764f5e3bbd4d1900eeb55b15c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "a461fef794e32b36b3ac685deb069048",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"controls\">Controls</h2>\n<h3 id=\"theme-selector\">Theme Selector</h3>\n<span class=\"paragraph\">Select which organizational theme to analyze.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "2ba83c6d3d18af62ea51a59be6e04422",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "2abd0c55df38b6535350786f0d2e0229",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='PKri-0' random-id='00b8201f-2e65-34a2-233a-4d8808ea5109'><marimo-dropdown data-initial-value='[&quot;Employee engagement&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Theme&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;Employee engagement&quot;,&quot;Leadership&quot;,&quot;Workforce&quot;,&quot;Workplace&quot;,&quot;Workplace well-being&quot;,&quot;Compensation&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false'></marimo-dropdown></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "36107e97c0a9deb8a588bbe96504df31",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"year-selector\">Year Selector</h3>\n<span class=\"paragraph\">Select which survey years to include in the visualization.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "31638518921b5a64702db420f1f178c8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='SFPL-0' random-id='b7fcdceb-5505-b09a-ed9b-b0d7076df89c'><marimo-multiselect data-initial-value='[&quot;2019&quot;,&quot;2020&quot;,&quot;2022&quot;,&quot;2024&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Survey years&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;2019&quot;,&quot;2020&quot;,&quot;2022&quot;,&quot;2024&quot;]' data-full-width='false'></marimo-multiselect></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
       "id": "BYtC",
-      "code_hash": "2653de3fd8fe031d86d67d1a55ffd0ad",
-      "outputs": [],
+      "code_hash": "1ad8e30dafbe41de96c8af5ee84c381e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"theme-score-trend-data\">Theme Score Trend Data</h2>\n<span class=\"paragraph\">Query the theme_scores table for the selected theme and years.\nThis data powers the trend line chart.</span></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "RGSE",
-      "code_hash": "bb70b5a940a799dcb11dca0e80d3497d",
+      "code_hash": "ae66729e16d22d4a76ff80a3eb5d1225",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "53eb921ef5b4e3665f9c6139bf418670",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "9ba11e48acf311351d2620f47708e695",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"trend-line-chart\">Trend Line Chart</h2>\n<span class=\"paragraph\">Line chart showing subtheme scores over time for the selected theme.\nEach line represents a subtheme, with points at each survey year.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "8bb09118df5bedf6fd018a589291f203",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "ce4360c14d4af721b2cb52ed1f2958d1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"year-over-year-delta-heatmap\">Year-over-Year Delta Heatmap</h2>\n<span class=\"paragraph\">Heatmap showing the change in scores between survey cycles.\nEach cell represents the delta from one year to the next for a subtheme.</span>\n<span class=\"paragraph\"><strong>Color Scale</strong>: Red = decline, Green = improvement, centered at 0.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "b80ad4f6b1e0f07e85ef3ac19ee6dc8e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "8d590c9ac39b41af8bfb5a3997bb6e81",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "fdebf853f2e4e82496dd31fbabaef8f0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"chi-square-significance-table\">Chi-Square Significance Table</h2>\n<span class=\"paragraph\">Table showing chi-square test results for 2019 vs 2024 comparison.\nSelect a question to drill down into its response distribution.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "d254ec0011f83d1afdd69d1081ea0735",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "61d0512d1c927ff1d4d587c83a7f9b2b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='TqIu-0' random-id='02f22a75-65ec-b5f3-ba7e-d9d0cc2562ff'><marimo-table data-initial-value='[]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Chi-square results (2019 vs 2024) - Select a question to drill down&lt;/span&gt;&lt;/span&gt;&quot;' data-data='&quot;[{&#92;&quot;_marimo_row_id&#92;&quot;:0,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q07&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 7. I have support at work to balance my work and personal life.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Work-life balance and workload&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:4563.1,&#92;&quot;p-value&#92;&quot;:0.0,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:1,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q45&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 45. I believe I have opportunities for promotion within my department or agency, given my education, skills and experience.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Job fit and development&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:1587.7,&#92;&quot;p-value&#92;&quot;:0.0,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:2,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q10&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 10. I have clear work objectives.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Performance management&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:1541.7,&#92;&quot;p-value&#92;&quot;:0.0,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:3,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q27&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 27. I receive useful feedback from my immediate supervisor on my job performance.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Performance management&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:1375.2,&#92;&quot;p-value&#92;&quot;:1.623861370342216e-296,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:4,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q14&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 14. I have opportunities to provide input into decisions that affect my work.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Empowerment&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:1138.8,&#92;&quot;p-value&#92;&quot;:2.9658309153638992e-245,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:5,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q16&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 16. I have support at work to provide a high level of service.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Empowerment&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:1035.3,&#92;&quot;p-value&#92;&quot;:7.864108308515777e-223,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:6,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q46&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 46. I feel I would be supported by my department or agency if I proposed a new idea.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Empowerment&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:989.3,&#92;&quot;p-value&#92;&quot;:7.541411240741072e-213,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:7,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q09&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 9. I receive meaningful recognition for work well done.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Performance management&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:855.2,&#92;&quot;p-value&#92;&quot;:8.394872380543265e-184,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:8,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q18&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 18. I can complete my assigned workload during my regular working hours.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Work-life balance and workload&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:553.8,&#92;&quot;p-value&#92;&quot;:1.5518520296736044e-118,&#92;&quot;Significant&#92;&quot;:true},{&#92;&quot;_marimo_row_id&#92;&quot;:9,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q43&#92;&quot;,&#92;&quot;Question text&#92;&quot;:&#92;&quot;Question 43. My department or agency does a good job of supporting employee career development.&#92;&quot;,&#92;&quot;Subtheme&#92;&quot;:&#92;&quot;Job fit and development&#92;&quot;,&#92;&quot;Chi-squared&#92;&quot;:432.8,&#92;&quot;p-value&#92;&quot;:2.2590878778805292e-92,&#92;&quot;Significant&#92;&quot;:true}]&quot;' data-total-rows='12' data-total-columns='6' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;QUESTION&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;Question text&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;Subtheme&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;Chi-squared&quot;,[&quot;number&quot;,&quot;f64&quot;]],[&quot;p-value&quot;,[&quot;number&quot;,&quot;f64&quot;]],[&quot;Significant&quot;,[&quot;boolean&quot;,&quot;bool&quot;]]]' data-selection='&quot;single&quot;' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-show-data-types='true' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-has-stable-row-id='true' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "ad7e98d0c2097f9e9edcf9ddcf1f7c20",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"question-drill-down\">Question Drill-Down</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "cc7d7f13fe6576c06b24c26ace08526a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "c4563d7125642576d4db1adb5ad62f06",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"question-response-distribution\">Question Response Distribution</h3>\n<span class=\"paragraph\">Bar chart showing the response distribution (Positive/Neutral/Negative)\nfor the selected question, comparing 2019 and 2024 side by side.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "5626f6836c9c90d73023f09b7f0011f2",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "48e88139f7e0dbde9fef4f80f186f118",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "9c7b76587dce6c2540787f37a24f4154",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"narrative-summary\">Narrative Summary</h2>\n<span class=\"paragraph\">Plain-language summary of findings for the selected theme, suitable for leadership audiences.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "aLJB",
+      "code_hash": "150d8f1f0d1c43560c97f0da71abe552",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nHfw",
+      "code_hash": "7532f9994fb11f564265956b75f048b6",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "xXTn",
+      "code_hash": "c40e6d0223049b5383e8ddffe0de9fd9",
       "outputs": [
         {
           "type": "data",

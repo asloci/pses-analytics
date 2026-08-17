@@ -31,17 +31,20 @@ def _(mo):
 
 @app.cell
 def _():
+
     import marimo as mo
     import duckdb
     import polars as pl
     import altair as alt
     from pathlib import Path
 
+
     return Path, alt, duckdb, mo, pl
 
 
 @app.cell
 def _(Path, duckdb):
+
     db_path = str(Path("data") / "pses.duckdb")
     con = duckdb.connect(db_path, read_only=True)
     return (con,)
@@ -60,6 +63,7 @@ def _(mo):
 
 @app.cell
 def _(con):
+
     theme_df = con.execute("""
         SELECT DISTINCT INDICATORENG, INDICATORID
         FROM indicator_map
@@ -74,11 +78,13 @@ def _(mo, theme_df):
         row["INDICATORENG"]: row["INDICATORENG"]
         for row in theme_df.iter_rows(named=True)
     }
+
     theme_selector = mo.ui.dropdown(
         options=theme_options,
         value=list(theme_options.keys())[0],
         label="Theme",
     )
+    theme_selector
     return (theme_selector,)
 
 
@@ -93,11 +99,13 @@ def _(mo):
 
 @app.cell
 def _(mo):
+
     year_selector = mo.ui.multiselect(
         options=["2019", "2020", "2022", "2024"],
         value=["2019", "2020", "2022", "2024"],
         label="Survey years",
     )
+    year_selector
     return (year_selector,)
 
 
@@ -114,12 +122,14 @@ def _(mo):
 
 @app.cell
 def _(year_selector):
+
     selected_years = [int(y) for y in year_selector.value]
     return (selected_years,)
 
 
 @app.cell
 def _(con, selected_years, theme_selector):
+
     theme_trend_df = con.execute("""
         SELECT
             ts.SURVEYR,
@@ -149,6 +159,7 @@ def _(mo):
 
 @app.cell
 def _(alt, mo, theme_selector, theme_trend_df):
+
     base = alt.Chart(theme_trend_df).encode(
         x=alt.X(
             "SURVEYR:O",
@@ -201,6 +212,7 @@ def _(mo):
 
 @app.cell
 def _(con, theme_selector):
+
     yoy_df = con.execute("""
         SELECT
             yc.SUBINDICATORENG,
@@ -220,6 +232,7 @@ def _(con, theme_selector):
 
 @app.cell
 def _(alt, mo, theme_selector, yoy_df):
+
     heatmap = (
         alt.Chart(yoy_df)
         .mark_rect()
@@ -290,6 +303,7 @@ def _(mo):
 
 @app.cell
 def _(con, theme_selector):
+
     chi_df = con.execute("""
         SELECT
             cr.QUESTION,
@@ -314,6 +328,7 @@ def _(con, theme_selector):
 
 @app.cell
 def _(chi_df, mo, pl):
+
     chi_table = mo.ui.table(
         chi_df.select([
             pl.col("QUESTION"),
@@ -326,6 +341,7 @@ def _(chi_df, mo, pl):
         selection="single",
         label="Chi-square results (2019 vs 2024) - Select a question to drill down",
     )
+    chi_table
     return (chi_table,)
 
 
@@ -333,21 +349,20 @@ def _(chi_df, mo, pl):
 def _(mo):
     mo.md("""
     ## Question Drill-Down
-
-    ### Selection Guard
-    Show message if no question is selected from the chi-square table.
     """)
     return
 
 
 @app.cell
-def _(chi_table, mo):
-    mo.stop(
-        len(chi_table.value) == 0,
-        mo.md("*Select a question from the table above to see the response distribution.*")
-    )
-    selected_question = chi_table.value["QUESTION"][0]
-    selected_title = chi_table.value["Question text"][0]
+def _(chi_df, chi_table):
+    # If a question is selected from the table, use it; otherwise use the first row
+    if chi_table.value is not None and len(chi_table.value) > 0:
+        selected_question = chi_table.value["QUESTION"][0]
+        selected_title = chi_table.value["Question text"][0]
+    else:
+        # Default to first question in the dataframe
+        selected_question = chi_df["QUESTION"][0]
+        selected_title = chi_df["TITLE_E"][0]
     return selected_question, selected_title
 
 
@@ -364,6 +379,7 @@ def _(mo):
 
 @app.cell
 def _(con, selected_question):
+
     dist_df = con.execute("""
         SELECT
             SURVEYR,
@@ -381,6 +397,7 @@ def _(con, selected_question):
 
 @app.cell
 def _(alt, dist_df, mo, selected_question, selected_title):
+
     dist_chart = (
         alt.Chart(dist_df)
         .mark_bar()
@@ -436,6 +453,7 @@ def _(mo):
 
 @app.cell
 def _(con, theme_selector):
+
     summary_df = con.execute("""
         WITH ranked AS (
             SELECT
@@ -454,6 +472,7 @@ def _(con, theme_selector):
 
 @app.cell
 def _(con, theme_selector):
+
     scores_df = con.execute("""
         SELECT
             ts.SUBINDICATORENG,
@@ -470,6 +489,7 @@ def _(con, theme_selector):
 
 @app.cell
 def _(mo, scores_df, summary_df, theme_selector):
+
     worst_subtheme = summary_df["SUBINDICATORENG"][0]
     worst_delta = summary_df["delta"][0]
     lowest_score = scores_df["score_2024"][0]
