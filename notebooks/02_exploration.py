@@ -56,7 +56,7 @@ def _(mo):
     ## Controls
 
     ### Theme Selector
-    Select which organizational theme to analyze.
+    Select which organizational theme to analyze, then click the "Run" button below.
     """)
     return
 
@@ -84,8 +84,9 @@ def _(mo, theme_df):
         value=list(theme_options.keys())[0],
         label="Theme",
     )
-    theme_selector
-    return (theme_selector,)
+    run_button = mo.ui.button(value="Run", label="Run")
+    mo.hstack([theme_selector, run_button])
+    return (theme_selector, run_button)
 
 
 @app.cell
@@ -121,14 +122,14 @@ def _(mo):
 
 
 @app.cell
-def _(year_selector):
+def _(run_button, year_selector):
 
     selected_years = [int(y) for y in year_selector.value]
     return (selected_years,)
 
 
 @app.cell
-def _(con, selected_years, theme_selector):
+def _(con, run_button, selected_years, theme_selector):
 
     theme_trend_df = con.execute("""
         SELECT
@@ -158,7 +159,7 @@ def _(mo):
 
 
 @app.cell
-def _(alt, mo, theme_selector, theme_trend_df):
+def _(alt, mo, run_button, theme_selector, theme_trend_df):
 
     base = alt.Chart(theme_trend_df).encode(
         x=alt.X(
@@ -211,7 +212,7 @@ def _(mo):
 
 
 @app.cell
-def _(con, theme_selector):
+def _(con, run_button, theme_selector):
 
     yoy_df = con.execute("""
         SELECT
@@ -231,7 +232,7 @@ def _(con, theme_selector):
 
 
 @app.cell
-def _(alt, mo, theme_selector, yoy_df):
+def _(alt, mo, run_button, theme_selector, yoy_df):
 
     heatmap = (
         alt.Chart(yoy_df)
@@ -302,7 +303,7 @@ def _(mo):
 
 
 @app.cell
-def _(con, theme_selector):
+def _(con, run_button, theme_selector):
 
     chi_df = con.execute("""
         SELECT
@@ -327,7 +328,7 @@ def _(con, theme_selector):
 
 
 @app.cell
-def _(chi_df, mo, pl):
+def _(chi_df, mo, pl, run_button):
 
     chi_table = mo.ui.table(
         chi_df.select([
@@ -452,7 +453,7 @@ def _(mo):
 
 
 @app.cell
-def _(con, theme_selector):
+def _(con, run_button, theme_selector):
 
     summary_df = con.execute("""
         WITH ranked AS (
@@ -471,7 +472,7 @@ def _(con, theme_selector):
 
 
 @app.cell
-def _(con, theme_selector):
+def _(con, run_button, theme_selector):
 
     scores_df = con.execute("""
         SELECT
@@ -488,7 +489,7 @@ def _(con, theme_selector):
 
 
 @app.cell
-def _(mo, scores_df, summary_df, theme_selector):
+def _(mo, run_button, scores_df, summary_df, theme_selector):
 
     worst_subtheme = summary_df["SUBINDICATORENG"][0]
     worst_delta = summary_df["delta"][0]
