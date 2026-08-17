@@ -53,10 +53,54 @@ def _(Path, duckdb):
 @app.cell
 def _(mo):
     mo.md("""
+    ## Theme Score Trend Data
+
+    Line chart showing scores for all six main themes across survey years.
+    """)
+    return
+
+
+@app.cell
+def _(alt, con, mo):
+    all_themes_df = con.execute("""
+        SELECT
+            ts.SURVEYR,
+            im.INDICATORENG as theme,
+            AVG(ts.mean_score) as avg_score
+        FROM theme_scores ts
+        JOIN indicator_map im ON ts.SUBINDICATORID = im.SUBINDICATORID
+        GROUP BY ts.SURVEYR, im.INDICATORENG
+        ORDER BY im.INDICATORID, ts.SURVEYR
+    """).pl()
+
+    all_themes_chart = (
+        alt.Chart(all_themes_df).mark_line(point=True, strokeWidth=2).encode(
+            x=alt.X("SURVEYR:O", title="Survey Year", axis=alt.Axis(labelAngle=0)),
+            y=alt.Y("avg_score:Q", title="Average Score (0-100)", scale=alt.Scale(domain=[0, 100])),
+            color=alt.Color("theme:N", title="Theme", sort=alt.SortField("INDICATORID", order="ascending")),
+            tooltip=[
+                alt.Tooltip("theme:N", title="Theme"),
+                alt.Tooltip("SURVEYR:O", title="Year"),
+                alt.Tooltip("avg_score:Q", title="Score", format=".1f"),
+            ],
+        ).properties(
+            title="Average scores by theme across all survey years",
+            width=700,
+            height=400,
+        ).interactive()
+    )
+
+    mo.ui.altair_chart(all_themes_chart)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ## Controls
 
     ### Theme Selector
-    Select which organizational theme to analyze, then click the "Run" button below.
+    Select which organizational theme to analyze.
     """)
     return
 
@@ -84,9 +128,8 @@ def _(mo, theme_df):
         value=list(theme_options.keys())[0],
         label="Theme",
     )
-    run_button = mo.ui.button(value="Run", label="Run")
-    mo.hstack([theme_selector, run_button])
-    return (theme_selector, run_button)
+    theme_selector
+    return (theme_selector,)
 
 
 @app.cell
@@ -111,25 +154,14 @@ def _(mo):
 
 
 @app.cell
-def _(mo):
-    mo.md("""
-    ## Theme Score Trend Data
-
-    Query the theme_scores table for the selected theme and years.
-    This data powers the trend line chart.
-    """)
-    return
-
-
-@app.cell
-def _(run_button, year_selector):
+def _(year_selector):
 
     selected_years = [int(y) for y in year_selector.value]
     return (selected_years,)
 
 
 @app.cell
-def _(con, run_button, selected_years, theme_selector):
+def _(con, selected_years, theme_selector):
 
     theme_trend_df = con.execute("""
         SELECT
@@ -159,7 +191,7 @@ def _(mo):
 
 
 @app.cell
-def _(alt, mo, run_button, theme_selector, theme_trend_df):
+def _(alt, mo, theme_selector, theme_trend_df):
 
     base = alt.Chart(theme_trend_df).encode(
         x=alt.X(
@@ -212,7 +244,7 @@ def _(mo):
 
 
 @app.cell
-def _(con, run_button, theme_selector):
+def _(con, theme_selector):
 
     yoy_df = con.execute("""
         SELECT
@@ -232,7 +264,7 @@ def _(con, run_button, theme_selector):
 
 
 @app.cell
-def _(alt, mo, run_button, theme_selector, yoy_df):
+def _(alt, mo, theme_selector, yoy_df):
 
     heatmap = (
         alt.Chart(yoy_df)
@@ -303,7 +335,7 @@ def _(mo):
 
 
 @app.cell
-def _(con, run_button, theme_selector):
+def _(con, theme_selector):
 
     chi_df = con.execute("""
         SELECT
@@ -328,7 +360,7 @@ def _(con, run_button, theme_selector):
 
 
 @app.cell
-def _(chi_df, mo, pl, run_button):
+def _(chi_df, mo, pl):
 
     chi_table = mo.ui.table(
         chi_df.select([
@@ -453,7 +485,7 @@ def _(mo):
 
 
 @app.cell
-def _(con, run_button, theme_selector):
+def _(con, theme_selector):
 
     summary_df = con.execute("""
         WITH ranked AS (
@@ -472,7 +504,7 @@ def _(con, run_button, theme_selector):
 
 
 @app.cell
-def _(con, run_button, theme_selector):
+def _(con, theme_selector):
 
     scores_df = con.execute("""
         SELECT
@@ -489,7 +521,7 @@ def _(con, run_button, theme_selector):
 
 
 @app.cell
-def _(mo, run_button, scores_df, summary_df, theme_selector):
+def _(mo, scores_df, summary_df, theme_selector):
 
     worst_subtheme = summary_df["SUBINDICATORENG"][0]
     worst_delta = summary_df["delta"][0]
