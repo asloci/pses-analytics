@@ -69,7 +69,7 @@ def _(alt, con, mo):
             AVG(ts.mean_score) as avg_score
         FROM theme_scores ts
         JOIN indicator_map im ON ts.SUBINDICATORID = im.SUBINDICATORID
-        GROUP BY ts.SURVEYR, im.INDICATORENG
+        GROUP BY ts.SURVEYR, im.INDICATORENG, im.INDICATORID
         ORDER BY im.INDICATORID, ts.SURVEYR
     """).pl()
 
