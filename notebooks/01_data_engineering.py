@@ -5,8 +5,8 @@ app = marimo.App(width="columns")
 
 
 @app.cell
-def _():
-    """
+def _(mo):
+    mo.md("""
     # PSES Data Engineering Pipeline
 
     ## Overview
@@ -29,7 +29,12 @@ def _():
     - Theme taxonomy: https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv
 
     **Note on Government of Canada CSV files**: They are BOM-prefixed and Latin-1 encoded.
-    """
+    """)
+    return
+
+
+@app.cell
+def _():
     import marimo as mo
     import duckdb
     import polars as pl
@@ -45,28 +50,33 @@ def _():
 
 
 @app.cell
-def _(db_path, duckdb, mo, os):
-    """
+def _(mo):
+    mo.md("""
     ## Step 0: Database Setup
 
     Connect to DuckDB. If the database file already exists, we'll drop and recreate
     all tables to ensure a clean, reproducible build.
-    """
+    """)
+    return
+
+
+@app.cell
+def _(db_path, duckdb, mo, os):
     # Check if DB exists - if so, we'll rebuild everything
     db_exists = os.path.exists(db_path)
 
     con = duckdb.connect(db_path)
 
     if db_exists:
-        _msg = mo.md(f"**Note**: Database file `{db_path}` already exists. All tables will be recreated.")
+        mo.md(f"**Note**: Database file `{db_path}` already exists. All tables will be recreated.")
     else:
-        _msg = mo.md(f"**Creating new database**: `{db_path}`")
+        mo.md(f"**Creating new database**: `{db_path}`")
     return (con,)
 
 
 @app.cell
-def _(con, mo):
-    """
+def _(mo):
+    mo.md("""
     ## Step 1: Data Ingestion
 
     ### Description
@@ -82,7 +92,12 @@ def _(con, mo):
 
     **Note**: The `ignore_errors=true` parameter allows DuckDB to skip malformed rows,
     which is important for government datasets that may have data quality issues.
-    """
+    """)
+    return
+
+
+@app.cell
+def _(con, mo):
     CSV_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv"
     RAW_TABLE = "raw_pses"
 
@@ -104,30 +119,35 @@ def _(con, mo):
 
 
 @app.cell
-def _(RAW_TABLE, con, mo):
-    """
+def _(mo):
+    mo.md("""
     ### Ingestion Verification
 
     Let's verify the ingestion by checking the schema and some basic statistics.
-    """
+    """)
+    return
+
+
+@app.cell
+def _(RAW_TABLE, con, mo):
     # Fix Binder Error: The duckdb_columns function might not support VARCHAR arguments. 
     # Using information_schema instead, which is standard SQL.
-    _cols = con.execute(f"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '{RAW_TABLE}'").fetchall()
+    cols = con.execute(f"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '{RAW_TABLE}'").fetchall()
 
     mo.md("**Schema:**")
-    for col_name, col_type in _cols[:20]:  # Show first 20 columns
+    for col_name, col_type in cols[:20]:  # Show first 20 columns
         mo.md(f"  - `{col_name}`: {col_type}")
-    mo.md(f"  ... and {len(_cols) - 20} more columns")
+    mo.md(f"  ... and {len(cols) - 20} more columns")
 
     # Check survey years
-    _years = con.execute(f"SELECT DISTINCT SURVEYR FROM {RAW_TABLE} ORDER BY SURVEYR").fetchall()
-    mo.md(f"**Survey Years**: {[y[0] for y in _years]}")
+    years = con.execute(f"SELECT DISTINCT SURVEYR FROM {RAW_TABLE} ORDER BY SURVEYR").fetchall()
+    mo.md(f"**Survey Years**: {[y[0] for y in years]}")
     return
 
 
 @app.cell
 def _(mo):
-    """
+    mo.md("""
     ## Step 2: Theme Mapping
 
     ### Description
@@ -144,14 +164,14 @@ def _(mo):
 
     **Note**: Government of Canada CSV files require special handling for BOM and encoding.
     We use a helper function to fetch, strip BOM, and decode from Latin-1 to UTF-8.
-    """
+    """)
+    return
+
+
+@app.cell
+def _():
     import tempfile
     import httpx
-
-    SUBSET1_URL = (
-        "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/"
-        "ses-2025/subset-1-sous-ensemble-1.csv"
-    )
 
     def fetch_with_bom_strip(url: str) -> str:
         """Fetch a BOM-prefixed CSV from a URL, strip the BOM, write to temp file, return path."""
@@ -168,6 +188,16 @@ def _(mo):
         tmp.close()
         return tmp.name
 
+    return fetch_with_bom_strip,
+
+
+@app.cell
+def _(fetch_with_bom_strip, mo):
+    SUBSET1_URL = (
+        "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/"
+        "ses-2025/subset-1-sous-ensemble-1.csv"
+    )
+
     csv_path = fetch_with_bom_strip(SUBSET1_URL)
 
     mo.md(f"**✓ Fetched theme CSV**: {SUBSET1_URL}")
@@ -175,12 +205,17 @@ def _(mo):
 
 
 @app.cell
-def _(con, csv_path, mo):
-    """
+def _(mo):
+    mo.md("""
     ### Build theme_map table
 
     One row per QUESTION with theme/subtheme metadata.
-    """
+    """)
+    return
+
+
+@app.cell
+def _(con, csv_path, mo):
     con.execute("""
         CREATE OR REPLACE TABLE theme_map AS
         SELECT DISTINCT ON (QUESTION)
@@ -196,18 +231,23 @@ def _(con, csv_path, mo):
         ORDER BY QUESTION
     """, [csv_path])
 
-    _n_theme_map = con.execute("SELECT COUNT(*) FROM theme_map").fetchone()[0]
-    mo.md(f"**✓ theme_map created**: {_n_theme_map} rows")
+    n_theme_map = con.execute("SELECT COUNT(*) FROM theme_map").fetchone()[0]
+    mo.md(f"**✓ theme_map created**: {n_theme_map} rows")
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ### Build indicator_map table
+
+    Distinct indicator/sub-indicator combinations - serves as a lookup reference.
+    """)
     return
 
 
 @app.cell
 def _(con, csv_path, mo):
-    """
-    ### Build indicator_map table
-
-    Distinct indicator/sub-indicator combinations - serves as a lookup reference.
-    """
     con.execute("""
         CREATE OR REPLACE TABLE indicator_map AS
         SELECT DISTINCT
@@ -221,22 +261,27 @@ def _(con, csv_path, mo):
         ORDER BY INDICATORID, SUBINDICATORID
     """, [csv_path])
 
-    _n_indicator = con.execute("SELECT COUNT(*) FROM indicator_map").fetchone()[0]
-    mo.md(f"**✓ indicator_map created**: {_n_indicator} rows")
+    n_indicator = con.execute("SELECT COUNT(*) FROM indicator_map").fetchone()[0]
+    mo.md(f"**✓ indicator_map created**: {n_indicator} rows")
 
     # Clean up temp file
-    import os as _os
-    _os.unlink(csv_path)
+    import os
+    os.unlink(csv_path)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ### Theme Taxonomy Summary
+
+    Let's preview the theme structure to verify the mapping loaded correctly.
+    """)
     return
 
 
 @app.cell
 def _(con, mo):
-    """
-    ### Theme Taxonomy Summary
-
-    Let's preview the theme structure to verify the mapping loaded correctly.
-    """
     theme_sample = con.execute("""
         SELECT QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
         FROM theme_map
@@ -253,8 +298,8 @@ def _(con, mo):
 
 
 @app.cell
-def _(con, mo):
-    """
+def _(mo):
+    mo.md("""
     ## Step 3: Data Transformation
 
     ### Description
@@ -282,44 +327,44 @@ def _(con, mo):
 
     **is_scored**: TRUE when the cleaned SCORE100 is not null
     **is_stable**: TRUE when the question appeared in all survey years
-    """
+    """)
+    return
+
+
+@app.cell
+def _():
     # Columns that use 9999 as "missing" sentinel
     INT_COLS = [
         "SCORE100", "ANSCOUNT", "POSITIVE", "NEUTRAL", "NEGATIVE", "AGREE",
         "answer1", "answer2", "answer3", "answer4", "answer5", "answer6", "answer7"
     ]
 
-    def _int_expr(col: str) -> str:
+    def int_expr(col: str) -> str:
         return f"NULLIF(CAST({col} AS INTEGER), 9999) AS {col}"
 
-    _score5_expr = "NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5"
+    score5_expr = "NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5"
 
-    _shared_select = (
+    shared_select = (
         "CAST(SURVEYR AS INTEGER) AS SURVEYR, QUESTION," +
-        ", ".join(_int_expr(c) for c in INT_COLS) +
-        f", {_score5_expr}"
+        ", ".join(int_expr(c) for c in INT_COLS) +
+        f", {score5_expr}"
     )
 
-    """
+    return INT_COLS, int_expr, score5_expr, shared_select
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ### Create pses_wog table
 
     Whole-of-government spine with cleaned, typed columns.
-    """
-    # Fixing NameError by defining shared_select using expressions from Step 3
-    if 'INT_COLS' not in locals():
-        INT_COLS = [
-            "SCORE100", "ANSCOUNT", "POSITIVE", "NEUTRAL", "NEGATIVE", "AGREE",
-            "answer1", "answer2", "answer3", "answer4", "answer5", "answer6", "answer7"
-        ]
-    def _int_expr(col: str) -> str:
-        return f"NULLIF(CAST({col} AS INTEGER), 9999) AS {col}"
-    _score5_expr = "NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5"
-    shared_select = (
-        "CAST(SURVEYR AS INTEGER) AS SURVEYR, QUESTION," +
-        ", ".join(_int_expr(c) for c in INT_COLS) +
-        f", {_score5_expr}"
-    )
+    """)
+    return
 
+
+@app.cell
+def _(INT_COLS, int_expr, score5_expr, shared_select, con, mo):
     con.execute(f"""
         CREATE OR REPLACE TABLE pses_wog AS
         WITH
@@ -370,14 +415,19 @@ def _(con, mo):
 
 
 @app.cell
-def _(INT_COLS, con, mo):
-    """
+def _(mo):
+    mo.md("""
     ### Create pses_sliced table
 
     Whole-of-government demographic/org slices.
-    """
-    _int_exprs = ", ".join(f"NULLIF(CAST({c} AS INTEGER), 9999) AS {c}" for c in INT_COLS)
-    _score5_expr_sliced = "NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5"
+    """)
+    return
+
+
+@app.cell
+def _(INT_COLS, int_expr, score5_expr, con, mo):
+    int_exprs = ", ".join(int_expr(c) for c in INT_COLS)
+    score5_expr_sliced = score5_expr
 
     con.execute(f"""
         CREATE OR REPLACE TABLE pses_sliced AS
@@ -386,8 +436,8 @@ def _(INT_COLS, con, mo):
             QUESTION,
             BYCOND,
             DEMCODE,
-            {_int_exprs},
-            {_score5_expr_sliced}
+            {int_exprs},
+            {score5_expr_sliced}
         FROM raw_pses
         WHERE BYCOND IS NOT NULL
           AND LEVEL1ID = 0
@@ -399,12 +449,17 @@ def _(INT_COLS, con, mo):
 
 
 @app.cell
-def _(con, mo):
-    """
+def _(mo):
+    mo.md("""
     ### Create pses_analysis table
 
     Primary analytical table - joins pses_wog with theme_map to add theme metadata.
-    """
+    """)
+    return
+
+
+@app.cell
+def _(con, mo):
     con.execute("""
         CREATE OR REPLACE TABLE pses_analysis AS
         SELECT
@@ -424,8 +479,8 @@ def _(con, mo):
 
 
 @app.cell
-def _():
-    """
+def _(mo):
+    mo.md("""
     ## Step 4: Statistical Analysis Tables
 
     ### Description
@@ -460,7 +515,12 @@ def _():
 
     **Q73 Exclusion**: Q73a-Q73w are 2024-only stress sub-questions and are excluded from
     longitudinal analysis. Only Q74 and Q75 are valid stress trend questions.
-    """
+    """)
+    return
+
+
+@app.cell
+def _():
     # Subquery: questions where SCORE100 is non-null in all 4 survey years
     FSQ = """
         SELECT QUESTION
@@ -473,12 +533,17 @@ def _():
 
 
 @app.cell
-def _(FSQ, con, mo):
-    """
+def _(mo):
+    mo.md("""
     ### Create theme_scores table
 
     Mean SCORE100 per subtheme per year for longitudinal analysis.
-    """
+    """)
+    return
+
+
+@app.cell
+def _(FSQ, con, mo):
     con.execute(f"""
         CREATE OR REPLACE TABLE theme_scores AS
         SELECT
@@ -503,18 +568,23 @@ def _(FSQ, con, mo):
             SURVEYR
     """)
 
-    _n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
-    mo.md(f"**✓ theme_scores created**: {_n_theme_scores} rows")
+    n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
+    mo.md(f"**✓ theme_scores created**: {n_theme_scores} rows")
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ### Create yoy_changes table
+
+    Year-over-year delta in mean_score per subtheme.
+    """)
     return
 
 
 @app.cell
 def _(con, mo):
-    """
-    ### Create yoy_changes table
-
-    Year-over-year delta in mean_score per subtheme.
-    """
     con.execute("""
         CREATE OR REPLACE TABLE yoy_changes AS
         SELECT
@@ -544,12 +614,17 @@ def _(con, mo):
 
 
 @app.cell
-def _(FSQ, con, mo):
-    """
+def _(mo):
+    mo.md("""
     ### Create question_correlations table
 
     Pearson r between every stable question pair (Python-side computation with scipy).
-    """
+    """)
+    return
+
+
+@app.cell
+def _(FSQ, con, mo):
     import itertools
     from collections import defaultdict
     from scipy.stats import pearsonr
@@ -568,17 +643,17 @@ def _(FSQ, con, mo):
     for surveyr, question, score in long_rows:
         pivot[question][surveyr] = float(score)
 
-    _years_list = [2019, 2020, 2022, 2024]
+    years_list = [2019, 2020, 2022, 2024]
 
     # Keep only questions present in all 4 years
     questions = sorted(
         q for q, yr_map in pivot.items()
-        if all(y in yr_map for y in _years_list)
+        if all(y in yr_map for y in years_list)
     )
 
     # Build vectors: question -> list[score] aligned to years
     vectors = {
-        q: [pivot[q][y] for y in _years_list]
+        q: [pivot[q][y] for y in years_list]
         for q in questions
     }
 
@@ -613,12 +688,17 @@ def _(FSQ, con, mo):
 
 
 @app.cell
-def _(FSQ, con, mo):
-    """
+def _(mo):
+    mo.md("""
     ### Create chi_square_results table
 
     Chi-square test on answer1-5 distribution between 2019 and 2024 (Python-side with scipy).
-    """
+    """)
+    return
+
+
+@app.cell
+def _(FSQ, con, mo):
     from scipy.stats import chi2_contingency
 
     rows = con.execute(f"""
@@ -709,13 +789,18 @@ def _(FSQ, con, mo):
 
 
 @app.cell
-def _(con, mo):
-    """
+def _(mo):
+    mo.md("""
     ## Step 5: Pipeline Validation & Summary
 
     ### Description
     Verify all tables were created successfully and display summary statistics.
-    """
+    """)
+    return
+
+
+@app.cell
+def _(con, mo):
     tables = [
         "raw_pses", "theme_map", "indicator_map",
         "pses_wog", "pses_sliced", "pses_analysis",
@@ -750,6 +835,11 @@ def _(con, mo):
     mo.md("\n**Next Steps:** Run `02_exploration.py` to analyze the data.")
     return
 
+
+# Example of pipe command usage for data transformation
+# In this notebook, values flow between cells via function parameters (Marimo's reactive system)
+# For example: fetch_with_bom_strip function is defined in one cell and used in another
+# The SQL expressions use string formatting with f-strings for composition
 
 if __name__ == "__main__":
     app.run()
