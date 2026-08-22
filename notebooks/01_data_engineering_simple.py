@@ -49,6 +49,18 @@ def _(mo):
 
 @app.cell
 def _(mo):
+    mo.Html(
+        """
+        <div style="background-color: rgba(255, 204, 0, 0.2); padding: 20px; border-left: 4px solid #ffcc00; border-radius: 4px;">
+            &#9888;&#65039; <strong>Attention:</strong> The section below does not describe or analyze the survey results. It shows the analytical dataset that is created by this notebook.
+        </div>
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
     mo.md("""
     ## Results
 

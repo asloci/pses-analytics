@@ -32,6 +32,19 @@
       "console": []
     },
     {
+      "id": "cjPu",
+      "code_hash": "5308b72fd647e6939a4f71071d6113fb",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "\n    <div style=\"background-color: rgba(255, 204, 0, 0.2); padding: 20px; border-left: 4px solid #ffcc00; border-radius: 4px;\">\n        &#9888;&#65039; <strong>Attention:</strong> The section below does not describe or analyze the survey results. It shows the analytical dataset that is created by this notebook.\n    </div>\n    "
+          }
+        }
+      ],
+      "console": []
+    },
+    {
       "id": "vblA",
       "code_hash": "8f383f5e6ed64b48bab05501d01f6390",
       "outputs": [
