@@ -67,11 +67,7 @@ def _():
     from pathlib import Path
 
     db_path = str(Path("data") / "pses.duckdb")
-
-    # Connect and query pses_wog table
     con = duckdb.connect(db_path)
-    cursor = con.execute("SELECT * FROM pses_wog LIMIT 50")
-
     return con, db_path, duckdb
 
 

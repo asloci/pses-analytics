@@ -46,7 +46,7 @@
     },
     {
       "id": "bkHC",
-      "code_hash": "773da705ed44564e99fe962f7cdb9abb",
+      "code_hash": "46223280fc83d97d22cab9afdc7ff12f",
       "outputs": [
         {
           "type": "data",
@@ -75,20 +75,13 @@
       "code_hash": "69862bd51b8ef281da798e0fdb1f0752",
       "outputs": [
         {
-          "type": "error",
-          "ename": "exception",
-          "evalue": "Name `mo` is not defined. It was expected to be defined in ",
-          "traceback": null
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"data-ingestion\">Data Ingestion</h3></span>"
+          }
         }
       ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stderr",
-          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17009/__marimo__cell_lEQa_.py\"</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">mo</span><span class=\"o\">.</span><span class=\"n\">md</span><span class=\"p\">(</span><span class=\"s2\">\"\"\"</span>\n<span class=\"w\">    </span><span class=\"pm\">^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'mo' is not defined</span>\n</pre></div>\n</span>",
-          "mimetype": "application/vnd.marimo+traceback"
-        }
-      ]
+      "console": []
     },
     {
       "id": "PKri",
@@ -220,20 +213,13 @@
       "code_hash": "ebcd6e52965fe309f46ff31fca1a2184",
       "outputs": [
         {
-          "type": "error",
-          "ename": "exception",
-          "evalue": "Name `mo` is not defined. It was expected to be defined in ",
-          "traceback": null
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"explanation\">Explanation</h2>\n<span class=\"paragraph\">The pipeline creates all tables needed for analysis. If the database already existed, you can view sample data above and download it. If you generated a new database, all tables have been created and are ready for analysis.</span></span>"
+          }
         }
       ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stderr",
-          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17009/__marimo__cell_nWHF_.py\"</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">mo</span><span class=\"o\">.</span><span class=\"n\">md</span><span class=\"p\">(</span><span class=\"s2\">\"\"\"</span>\n<span class=\"w\">    </span><span class=\"pm\">^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'mo' is not defined</span>\n</pre></div>\n</span>",
-          "mimetype": "application/vnd.marimo+traceback"
-        }
-      ]
+      "console": []
     },
     {
       "id": "iLit",
@@ -242,7 +228,7 @@
         {
           "type": "error",
           "ename": "exception",
-          "evalue": "Name `db_path` is not defined. It was expected to be defined in ",
+          "evalue": "name 'run_pipeline' is not defined",
           "traceback": null
         }
       ],
@@ -250,7 +236,7 @@
         {
           "type": "stream",
           "name": "stderr",
-          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17009/__marimo__cell_iLit_.py\"</span>, line <span class=\"m\">2</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">summary_con</span> <span class=\"o\">=</span> <span class=\"n\">_dd</span><span class=\"o\">.</span><span class=\"n\">connect</span><span class=\"p\">(</span><span class=\"n\">db_path</span><span class=\"p\">)</span>\n<span class=\"w\">                              </span><span class=\"pm\">^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'db_path' is not defined</span>\n</pre></div>\n</span>",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17009/__marimo__cell_iLit_.py\"</span>, line <span class=\"m\">17</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"n\">run_pipeline</span><span class=\"p\">:</span>\n<span class=\"w\">       </span><span class=\"pm\">^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'run_pipeline' is not defined</span>\n</pre></div>\n</span>",
           "mimetype": "application/vnd.marimo+traceback"
         }
       ]
@@ -260,20 +246,13 @@
       "code_hash": "6d71892811762db3dfe29fd168b73148",
       "outputs": [
         {
-          "type": "error",
-          "ename": "exception",
-          "evalue": "Name `mo` is not defined. It was expected to be defined in ",
-          "traceback": null
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"annex\">Annex</h2>\n<span class=\"paragraph\">The BOM-prefix stripper helper function is used to deal with Excel-like artefacts.</span>\n<div class=\"language-python codehilite\"><pre><span></span><code><span class=\"kn\">import</span><span class=\"w\"> </span><span class=\"nn\">tempfile</span>\n<span class=\"kn\">import</span><span class=\"w\"> </span><span class=\"nn\">httpx</span>\n<span class=\"k\">def</span><span class=\"w\"> </span><span class=\"nf\">fetch_with_bom_strip</span><span class=\"p\">(</span><span class=\"n\">url</span><span class=\"p\">:</span> <span class=\"nb\">str</span><span class=\"p\">)</span> <span class=\"o\">-&gt;</span> <span class=\"nb\">str</span><span class=\"p\">:</span>\n    <span class=\"n\">response</span> <span class=\"o\">=</span> <span class=\"n\">httpx</span><span class=\"o\">.</span><span class=\"n\">get</span><span class=\"p\">(</span><span class=\"n\">url</span><span class=\"p\">,</span> <span class=\"n\">timeout</span><span class=\"o\">=</span><span class=\"mi\">60</span><span class=\"p\">,</span> <span class=\"n\">follow_redirects</span><span class=\"o\">=</span><span class=\"kc\">True</span><span class=\"p\">)</span>\n    <span class=\"n\">response</span><span class=\"o\">.</span><span class=\"n\">raise_for_status</span><span class=\"p\">()</span>\n    <span class=\"n\">content</span> <span class=\"o\">=</span> <span class=\"n\">response</span><span class=\"o\">.</span><span class=\"n\">content</span>\n    <span class=\"k\">if</span> <span class=\"n\">content</span><span class=\"o\">.</span><span class=\"n\">startswith</span><span class=\"p\">(</span><span class=\"sa\">b</span><span class=\"s1\">'</span><span class=\"se\">\\xef\\xbb\\xbf</span><span class=\"s1\">'</span><span class=\"p\">):</span>\n        <span class=\"n\">content</span> <span class=\"o\">=</span> <span class=\"n\">content</span><span class=\"p\">[</span><span class=\"mi\">3</span><span class=\"p\">:]</span>\n    <span class=\"n\">text</span> <span class=\"o\">=</span> <span class=\"n\">content</span><span class=\"o\">.</span><span class=\"n\">decode</span><span class=\"p\">(</span><span class=\"s1\">'latin-1'</span><span class=\"p\">)</span>\n    <span class=\"n\">tmp</span> <span class=\"o\">=</span> <span class=\"n\">tempfile</span><span class=\"o\">.</span><span class=\"n\">NamedTemporaryFile</span><span class=\"p\">(</span><span class=\"n\">delete</span><span class=\"o\">=</span><span class=\"kc\">False</span><span class=\"p\">,</span> <span class=\"n\">suffix</span><span class=\"o\">=</span><span class=\"s1\">'.csv'</span><span class=\"p\">,</span> <span class=\"n\">mode</span><span class=\"o\">=</span><span class=\"s1\">'w'</span><span class=\"p\">,</span> <span class=\"n\">encoding</span><span class=\"o\">=</span><span class=\"s1\">'utf-8'</span><span class=\"p\">)</span>\n    <span class=\"n\">tmp</span><span class=\"o\">.</span><span class=\"n\">write</span><span class=\"p\">(</span><span class=\"n\">text</span><span class=\"p\">)</span>\n    <span class=\"n\">tmp</span><span class=\"o\">.</span><span class=\"n\">close</span><span class=\"p\">()</span>\n    <span class=\"k\">return</span> <span class=\"n\">tmp</span><span class=\"o\">.</span><span class=\"n\">name</span>\n</code></pre></div></span>"
+          }
         }
       ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stderr",
-          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17009/__marimo__cell_ZHCJ_.py\"</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">mo</span><span class=\"o\">.</span><span class=\"n\">md</span><span class=\"p\">(</span><span class=\"sa\">r</span><span class=\"s2\">\"\"\"</span>\n<span class=\"w\">    </span><span class=\"pm\">^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'mo' is not defined</span>\n</pre></div>\n</span>",
-          "mimetype": "application/vnd.marimo+traceback"
-        }
-      ]
+      "console": []
     }
   ]
 }
