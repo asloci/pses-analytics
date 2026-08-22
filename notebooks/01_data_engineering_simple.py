@@ -9,24 +9,26 @@ def _(mo):
     mo.md("""
     # Data Engineering 🌊🍃 Notebook for the Government of Canada Public Service Employee Survey (PSES)
 
-    ## Overview
+    ## Summary
 
-    This notebook ingested and built an analytical dataset for Public Service Employee Survey (PSES) results longitudinal analysis across themes and sub-themes.
+    This notebook ingested and built an analytical dataset to display Public Service Employee Survey (PSES) results for longitudinal analysis across themes and sub-themes.
 
     It performed the following steps:
 
-    1. **Ingestion**: Downloaded the raw PSES CSV from Canada.ca and converted it into DuckDB format
+    1. **Ingestion**: Downloaded the raw PSES CSV and converted it into [DuckDB](https://duckdb.org/) format
     2. **Theme Mapping**: Loaded the theme/indicator taxonomy from Subset 1 CSV[^1]
     3. **Transformation**: Created whole-of-government analytical tables
     4. **Statistical Analysis**: Computed theme scores, year-over-year changes
 
     **Output**:
 
-    All tables were written to `data/pses.duckdb`. If you do not see a sample at [Section 2: Database Setup](#database-setup), you can generate one using this notebook.
+    All tables were written to `data/pses.duckdb`. If you do not see sample data at [Section 2: Database Setup](#database-setup), you can generate the database using this notebook.
 
     **Reproducibility**:
 
-    Any user can run this notebook ***insert instructions on uv and code execution***
+    Any user can run this notebook using the following steps:
+
+    - ***insert instructions on uv and code execution***
 
     **Data Source**:
 
