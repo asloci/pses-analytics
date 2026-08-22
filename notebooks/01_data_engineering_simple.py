@@ -22,7 +22,7 @@ def _(mo):
 
     **Output**:
 
-    All tables were written to `data/pses.duckdb`. If you do not see sample data at [Section 2: Database Setup](#database-setup), you can generate the database using this notebook.
+    All tables were written to `data/pses.duckdb`. If you do not see sample data in [Results](#results), you can generate the database using this notebook.
 
     **Reproducibility**:
 
@@ -55,7 +55,7 @@ def _():
 @app.cell
 def _(mo):
     mo.md("""
-    ## Database Setup
+    ## Results
 
     Check for existing database. If it exists, view sample data and download. If not, generate it.
     """)
@@ -64,59 +64,63 @@ def _(mo):
 
 @app.cell
 def _(db_path, duckdb, os):
-    db_exists = os.path.exists(db_path)
-    if db_exists:
+    def check_database():
         check_con = duckdb.connect(db_path)
         try:
             cursor = check_con.execute("SELECT * FROM pses_analysis LIMIT 5")
-            sample = cursor.fetchall()
-            columns = [desc[0] for desc in cursor.description]
-            sample = [dict(zip(columns, row)) for row in sample]
-            if sample is not None and len(sample) > 0:
-                db_status = "exists_with_data"
-                sample_table = sample
+            sample_rows = cursor.fetchall()
+            cols = [desc[0] for desc in cursor.description]
+            sample_table = [dict(zip(cols, row)) for row in sample_rows]
+            if sample_table is not None and len(sample_table) > 0:
+                return "exists_with_data", sample_table
             else:
-                db_status = "exists_empty"
-                sample_table = None
+                return "exists_empty", None
         except Exception:
-            db_status = "exists_empty"
-            sample_table = None
-        check_con.close()
+            return "exists_empty", None
+        finally:
+            check_con.close()
+
+    if os.path.exists(db_path):
+        db_status, sample_table = check_database()
     else:
         db_status = "not_exists"
         sample_table = None
-    return (db_status,)
-
-
-app._unparsable_cell(
-    r"""
-    if db_status == "exists_with_data":
-        table = mo.ui.table(sample_table)
-        md = mo.md(f"**Database exists**: `{db_path}`")
-        download_btn = mo.ui.button(label="Download Database", value=False)
-        run_btn = None
-        return table, md, download_btn
-    elif db_status == "exists_empty":
-        md = mo.md(f"**Database exists but is empty**: `{db_path}`")
-        run_btn = mo.ui.button(label="Generate Database", value=False)
-        return md, run_btn
-    else:
-        md = mo.md(f"**Database not found**: `{db_path}`")
-        run_btn = mo.ui.button(label="Generate Database", value=False)
-        return md, run_btn
-    """,
-    name="_"
-)
+    return db_status, sample_table
 
 
 @app.cell
-def _(btn_tuple, db_status):
-    # btn_tuple can be: (table, md, download_btn) or (md, run_btn)
-    if isinstance(btn_tuple, tuple):
-        # Extract the button - it's the last element in the tuple
-        run_btn = btn_tuple[-1] if len(btn_tuple) > 0 else None
+def _(db_path, db_status, mo, sample_table):
+    # Functional approach: define display functions
+    def show_table(data):
+        return mo.ui.table(data)
+
+    def show_status(msg):
+        return mo.md(msg)
+
+    def show_button(label):
+        return mo.ui.button(label=label, value=False)
+
+    # Use the functions based on status - return a tuple
+    if db_status == "exists_with_data":
+        result = show_table(sample_table), show_status(f"**Database exists**: `{db_path}`"), show_button("Download Database")
+    elif db_status == "exists_empty":
+        result = show_status(f"**Database exists but is empty**: `{db_path}`"), show_button("Generate Database")
     else:
-        run_btn = btn_tuple
+        result = show_status(f"**Database not found**: `{db_path}`"), show_button("Generate Database")
+    return
+
+
+@app.cell
+def _(db_status, table_md_btn):
+    # Functional approach: extract button from UI elements tuple
+    def get_button(elements):
+        for el in elements:
+            if hasattr(el, 'value'):
+                return el
+        return None
+
+    # table_md_btn is a tuple: (table, md, btn) or (md, btn)
+    run_btn = get_button(table_md_btn)
 
     if db_status == "not_exists" and run_btn is not None:
         run_pipeline = run_btn.value
