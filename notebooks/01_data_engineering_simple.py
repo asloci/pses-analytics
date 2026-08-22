@@ -5,6 +5,13 @@ app = marimo.App(width="columns")
 
 
 @app.cell
+def _():
+    import marimo as mo
+
+    return (mo,)
+
+
+@app.cell
 def _(mo):
     mo.md("""
     # Data Engineering 🌊🍃 Notebook for the Government of Canada Public Service Employee Survey (PSES)
@@ -41,92 +48,42 @@ def _(mo):
 
 
 @app.cell
-def _():
-    import marimo as mo
-    import duckdb
-    import os
-    from pathlib import Path
-    data_dir = Path("data")
-    data_dir.mkdir(exist_ok=True)
-    db_path = str(data_dir / "pses.duckdb")
-    return db_path, duckdb, mo, os
-
-
-@app.cell
 def _(mo):
     mo.md("""
     ## Results
 
-    Check for existing database. If it exists, view sample data and download. If not, generate it.
+    Once the database has been built, you can view a sample from the whole-of-government analytical table as follows:
+    ```sql
+    SELECT * FROM pses_wog LIMIT 50
+    ```
     """)
     return
 
 
 @app.cell
-def _(db_path, duckdb, os):
-    def check_database():
-        check_con = duckdb.connect(db_path)
-        try:
-            cursor = check_con.execute("SELECT * FROM pses_analysis LIMIT 5")
-            sample_rows = cursor.fetchall()
-            cols = [desc[0] for desc in cursor.description]
-            sample_table = [dict(zip(cols, row)) for row in sample_rows]
-            if sample_table is not None and len(sample_table) > 0:
-                return "exists_with_data", sample_table
-            else:
-                return "exists_empty", None
-        except Exception:
-            return "exists_empty", None
-        finally:
-            check_con.close()
+def _():
+    import duckdb
+    import os
+    from pathlib import Path
 
-    if os.path.exists(db_path):
-        db_status, sample_table = check_database()
-    else:
-        db_status = "not_exists"
-        sample_table = None
-    return db_status, sample_table
+    db_path = str(Path("data") / "pses.duckdb")
+
+    # Connect and query pses_wog table
+    con = duckdb.connect(db_path)
+    cursor = con.execute("SELECT * FROM pses_wog LIMIT 50")
+
+    return con, db_path, duckdb
 
 
-@app.cell
-def _(db_path, db_status, mo, sample_table):
-    # Functional approach: define display functions
-    def show_table(data):
-        return mo.ui.table(data)
-
-    def show_status(msg):
-        return mo.md(msg)
-
-    def show_button(label):
-        return mo.ui.button(label=label, value=False)
-
-    # Use the functions based on status - return a tuple
-    if db_status == "exists_with_data":
-        result = show_table(sample_table), show_status(f"**Database exists**: `{db_path}`"), show_button("Download Database")
-    elif db_status == "exists_empty":
-        result = show_status(f"**Database exists but is empty**: `{db_path}`"), show_button("Generate Database")
-    else:
-        result = show_status(f"**Database not found**: `{db_path}`"), show_button("Generate Database")
+@app.cell(hide_code=True)
+def _(con, mo):
+    _df = mo.sql(
+        f"""
+        SELECT * FROM pses_wog LIMIT 50
+        """,
+        engine=con
+    )
     return
-
-
-@app.cell
-def _(db_status, table_md_btn):
-    # Functional approach: extract button from UI elements tuple
-    def get_button(elements):
-        for el in elements:
-            if hasattr(el, 'value'):
-                return el
-        return None
-
-    # table_md_btn is a tuple: (table, md, btn) or (md, btn)
-    run_btn = get_button(table_md_btn)
-
-    if db_status == "not_exists" and run_btn is not None:
-        run_pipeline = run_btn.value
-    else:
-        run_pipeline = False
-    return (run_pipeline,)
 
 
 @app.cell
