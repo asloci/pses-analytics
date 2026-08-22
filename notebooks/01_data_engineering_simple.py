@@ -68,7 +68,10 @@ def _(db_path, duckdb, os):
     if db_exists:
         check_con = duckdb.connect(db_path)
         try:
-            sample = check_con.execute("SELECT * FROM pses_analysis LIMIT 5").fetchdf()
+            cursor = check_con.execute("SELECT * FROM pses_analysis LIMIT 5")
+            sample = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
+            sample = [dict(zip(columns, row)) for row in sample]
             if sample is not None and len(sample) > 0:
                 db_status = "exists_with_data"
                 sample_table = sample
@@ -82,29 +85,39 @@ def _(db_path, duckdb, os):
     else:
         db_status = "not_exists"
         sample_table = None
-    return db_status, sample_table
+    return (db_status,)
 
 
-@app.cell
-def _(db_path, db_status, mo, sample_table):
+app._unparsable_cell(
+    r"""
     if db_status == "exists_with_data":
-        mo.ui.table(sample_table)
-        mo.md(f"**Database exists**: `{db_path}`")
+        table = mo.ui.table(sample_table)
+        md = mo.md(f"**Database exists**: `{db_path}`")
         download_btn = mo.ui.button(label="Download Database", value=False)
         run_btn = None
+        return table, md, download_btn
     elif db_status == "exists_empty":
-        mo.md(f"**Database exists but is empty**: `{db_path}`")
+        md = mo.md(f"**Database exists but is empty**: `{db_path}`")
         run_btn = mo.ui.button(label="Generate Database", value=False)
-        download_btn = None
+        return md, run_btn
     else:
-        mo.md(f"**Database not found**: `{db_path}`")
+        md = mo.md(f"**Database not found**: `{db_path}`")
         run_btn = mo.ui.button(label="Generate Database", value=False)
-        download_btn = None
-    return (run_btn,)
+        return md, run_btn
+    """,
+    name="_"
+)
 
 
 @app.cell
-def _(db_status, run_btn):
+def _(btn_tuple, db_status):
+    # btn_tuple can be: (table, md, download_btn) or (md, run_btn)
+    if isinstance(btn_tuple, tuple):
+        # Extract the button - it's the last element in the tuple
+        run_btn = btn_tuple[-1] if len(btn_tuple) > 0 else None
+    else:
+        run_btn = btn_tuple
+
     if db_status == "not_exists" and run_btn is not None:
         run_pipeline = run_btn.value
     else:

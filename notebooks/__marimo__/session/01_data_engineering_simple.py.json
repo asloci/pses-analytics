@@ -7,12 +7,12 @@
   "cells": [
     {
       "id": "Hbol",
-      "code_hash": "575433bf759e6519cca90e2656e91d1c",
+      "code_hash": "a0d3a245b2b3493b1bf4ca1c9ba08174",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"data-engineering-notebook-for-the-government-of-canada-public-service-employee-survey-pses\">Data Engineering \ud83c\udf0a\ud83c\udf43 Notebook for the Government of Canada Public Service Employee Survey (PSES)</h1>\n<h2 id=\"summary\">Summary</h2>\n<span class=\"paragraph\">This notebook ingested and built an analytical dataset to display Public Service Employee Survey (PSES) results for longitudinal analysis across themes and sub-themes.</span>\n<span class=\"paragraph\">It performed the following steps:</span>\n<ol>\n<li><strong>Ingestion</strong>: Downloaded the raw PSES CSV and converted it into <a href=\"https://duckdb.org/\" rel=\"noopener noreferrer\" target=\"_blank\">DuckDB</a> format</li>\n<li><strong>Theme Mapping</strong>: Loaded the theme/indicator taxonomy from Subset 1 CSV<sup id=\"fnref:145-1\"><a class=\"footnote-ref\" href=\"#fn:145-1\">1</a></sup></li>\n<li><strong>Transformation</strong>: Created whole-of-government analytical tables</li>\n<li><strong>Statistical Analysis</strong>: Computed theme scores, year-over-year changes</li>\n</ol>\n<span class=\"paragraph\"><strong>Output</strong>:</span>\n<span class=\"paragraph\">All tables were written to <code>data/pses.duckdb</code>. If you do not see sample data at <a href=\"#database-setup\">Section 2: Database Setup</a>, you can generate the database using this notebook.</span>\n<span class=\"paragraph\"><strong>Reproducibility</strong>:</span>\n<span class=\"paragraph\">Any user can run this notebook using the following steps: </span>\n<ul>\n<li><strong><em>insert instructions on uv and code execution</em></strong></li>\n</ul>\n<span class=\"paragraph\"><strong>Data Source</strong>:</span>\n<ul>\n<li>Main dataset: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv</a></li>\n<li>Theme taxonomy: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv</a></li>\n</ul>\n<div class=\"footnote\">\n<hr />\n<ol>\n<li id=\"fn:145-1\">This file contains characters out of range for the UTF-8 encoding. <a href=\"#annex\">Annex</a> contains the helper function that deals with the BOM-prefixed, Latin-1 encoded file in question.&#160;<a class=\"footnote-backref\" href=\"#fnref:145-1\" title=\"Jump back to footnote 1 in the text\">&#8617;</a></li>\n</ol>\n</div></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"data-engineering-notebook-for-the-government-of-canada-public-service-employee-survey-pses\">Data Engineering \ud83c\udf0a\ud83c\udf43 Notebook for the Government of Canada Public Service Employee Survey (PSES)</h1>\n<h2 id=\"summary\">Summary</h2>\n<span class=\"paragraph\">This notebook ingested and built an analytical dataset to display Public Service Employee Survey (PSES) results for longitudinal analysis across themes and sub-themes.</span>\n<span class=\"paragraph\">It performed the following steps:</span>\n<ol>\n<li><strong>Ingestion</strong>: Downloaded the raw PSES CSV and converted it into <a href=\"https://duckdb.org/\" rel=\"noopener noreferrer\" target=\"_blank\">DuckDB</a> format</li>\n<li><strong>Theme Mapping</strong>: Loaded the theme/indicator taxonomy from Subset 1 CSV<sup id=\"fnref:8-1\"><a class=\"footnote-ref\" href=\"#fn:8-1\">1</a></sup></li>\n<li><strong>Transformation</strong>: Created whole-of-government analytical tables</li>\n<li><strong>Statistical Analysis</strong>: Computed theme scores, year-over-year changes</li>\n</ol>\n<span class=\"paragraph\"><strong>Output</strong>:</span>\n<span class=\"paragraph\">All tables were written to <code>data/pses.duckdb</code>. If you do not see sample data at <a href=\"#database-setup\">Section 2: Database Setup</a>, you can generate the database using this notebook.</span>\n<span class=\"paragraph\"><strong>Reproducibility</strong>:</span>\n<span class=\"paragraph\">Any user can run this notebook using the following steps:</span>\n<ul>\n<li><strong><em>insert instructions on uv and code execution</em></strong></li>\n</ul>\n<span class=\"paragraph\"><strong>Data Source</strong>:</span>\n<ul>\n<li>Main dataset: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv</a></li>\n<li>Theme taxonomy: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv</a></li>\n</ul>\n<div class=\"footnote\">\n<hr />\n<ol>\n<li id=\"fn:8-1\">This file contains characters out of range for the UTF-8 encoding. <a href=\"#annex\">Annex</a> contains the helper function that deals with the BOM-prefixed, Latin-1 encoded file in question.&#160;<a class=\"footnote-backref\" href=\"#fnref:8-1\" title=\"Jump back to footnote 1 in the text\">&#8617;</a></li>\n</ol>\n</div></span>"
           }
         }
       ],
@@ -46,7 +46,7 @@
     },
     {
       "id": "bkHC",
-      "code_hash": "19016b2d4b2f766807c2d77b35fb5e1c",
+      "code_hash": "c94a05228154ac5abddcb8d0dc2999c1",
       "outputs": [
         {
           "type": "data",
@@ -59,29 +59,36 @@
     },
     {
       "id": "lEQa",
-      "code_hash": "9ff3913108fb1cad0a3a4f95bcf01fd2",
+      "code_hash": "c643ea2a43985d8915173d46a6fefccb",
       "outputs": [
         {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
+          "type": "error",
+          "ename": "syntax",
+          "evalue": "line 6\nSyntaxError: 'return' outside function\n",
+          "traceback": []
         }
       ],
       "console": []
     },
     {
       "id": "PKri",
-      "code_hash": "fae67d14c1c1b097ff7a62ab70e5516b",
+      "code_hash": "863b3edf56aa5c944226fb2582f95b88",
       "outputs": [
         {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
+          "type": "error",
+          "ename": "exception",
+          "evalue": "name 'btn_tuple' is not defined",
+          "traceback": null
         }
       ],
-      "console": []
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_16041/__marimo__cell_PKri_.py\"</span>, line <span class=\"m\">2</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"nb\">isinstance</span><span class=\"p\">(</span><span class=\"n\">btn_tuple</span><span class=\"p\">,</span> <span class=\"nb\">tuple</span><span class=\"p\">):</span>\n<span class=\"w\">                  </span><span class=\"pm\">^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'btn_tuple' is not defined</span>\n</pre></div>\n</span>",
+          "mimetype": "application/vnd.marimo+traceback"
+        }
+      ]
     },
     {
       "id": "Xref",
@@ -101,10 +108,10 @@
       "code_hash": "18c627ce7a0f4537ce54953afdb28725",
       "outputs": [
         {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (NameError): ",
+          "traceback": null
         }
       ],
       "console": []
@@ -114,10 +121,10 @@
       "code_hash": "ec13d4ef8738d6b8c5d9900331a8984b",
       "outputs": [
         {
-          "type": "data",
-          "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>Using existing table</strong>: <code>raw_pses</code> with 12,179,345 rows</span></span>"
-          }
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (NameError): ",
+          "traceback": null
         }
       ],
       "console": []
@@ -140,10 +147,10 @@
       "code_hash": "798c7d1bbf578d9a166baf23555d6be6",
       "outputs": [
         {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (NameError): ",
+          "traceback": null
         }
       ],
       "console": []
@@ -166,10 +173,10 @@
       "code_hash": "8d4c010247f40824ddd4625f0f4d5afa",
       "outputs": [
         {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (NameError): ",
+          "traceback": null
         }
       ],
       "console": []
@@ -179,10 +186,10 @@
       "code_hash": "25ca9586619a18b5ea4f1b3f72244086",
       "outputs": [
         {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (NameError): ",
+          "traceback": null
         }
       ],
       "console": []
@@ -192,10 +199,10 @@
       "code_hash": "8adbe6ad871ae0091821e7f5a15eaeb5",
       "outputs": [
         {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (NameError): ",
+          "traceback": null
         }
       ],
       "console": []
@@ -218,10 +225,10 @@
       "code_hash": "273233bdd4d031b4c4a5ce4daaa16b4c",
       "outputs": [
         {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (NameError): ",
+          "traceback": null
         }
       ],
       "console": []
