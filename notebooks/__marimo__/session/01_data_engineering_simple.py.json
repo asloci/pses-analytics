@@ -1,0 +1,159 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.24.0",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "b70ac4d27c733d58e22cd65845cfd963",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"data-engineering-notebook-for-the-government-of-canada-public-service-employee-survey-pses\">Data Engineering \ud83c\udf0a\ud83c\udf43 Notebook for the Government of Canada Public Service Employee Survey (PSES)</h1>\n<h2 id=\"overview\">Overview</h2>\n<span class=\"paragraph\">This notebook ingested and built an analytical dataset for Public Service Employee Survey (PSES) results longitudinal analysis across themes and sub-themes.</span>\n<span class=\"paragraph\">It performed the following steps:</span>\n<ol>\n<li><strong>Ingestion</strong>: Downloaded the raw PSES CSV from Canada.ca and converted it into DuckDB format</li>\n<li><strong>Theme Mapping</strong>: Loaded the theme/indicator taxonomy from Subset 1 CSV<sup id=\"fnref:9-1\"><a class=\"footnote-ref\" href=\"#fn:9-1\">1</a></sup></li>\n<li><strong>Transformation</strong>: Created whole-of-government analytical tables</li>\n<li><strong>Statistical Analysis</strong>: Computed theme scores, year-over-year changes</li>\n</ol>\n<span class=\"paragraph\"><strong>Output</strong>:</span>\n<span class=\"paragraph\">All tables were written to <code>data/pses.duckdb</code>. If you do not see a sample at <a href=\"#database-setup\">Section 2: Database Setup</a>, you can generate one using this notebook.</span>\n<span class=\"paragraph\"><strong>Reproducibility</strong>:</span>\n<span class=\"paragraph\">Any user can run this notebook <strong><em>insert instructions on uv and code execution</em></strong></span>\n<span class=\"paragraph\"><strong>Data Source</strong>:</span>\n<ul>\n<li>Main dataset: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv</a></li>\n<li>Theme taxonomy: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv</a></li>\n</ul>\n<div class=\"footnote\">\n<hr />\n<ol>\n<li id=\"fn:9-1\">This file contains characters out of range for the UTF-8 encoding. <a href=\"#annex\">Annex</a> contains the helper function that deals with the BOM-prefixed, Latin-1 encoded file in question.&#160;<a class=\"footnote-backref\" href=\"#fnref:9-1\" title=\"Jump back to footnote 1 in the text\">&#8617;</a></li>\n</ol>\n</div></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "a3fedc256979ba94abdc977bb98ed7d1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "43d3574a1a2c58538197bae3d6b5a3c5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"database-setup\">Database Setup</h2>\n<span class=\"paragraph\">Check for existing database. If it exists, view sample data and download. If not, generate it.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "19016b2d4b2f766807c2d77b35fb5e1c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "9ff3913108fb1cad0a3a4f95bcf01fd2",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "fae67d14c1c1b097ff7a62ab70e5516b",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "69862bd51b8ef281da798e0fdb1f0752",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"data-ingestion\">Data Ingestion</h3></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "18c627ce7a0f4537ce54953afdb28725",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "ec13d4ef8738d6b8c5d9900331a8984b",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "c2d45489178ff672c22bb8d34600c9ce",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "798c7d1bbf578d9a166baf23555d6be6",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "1f9e9890f24ad40af17a551541795460",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "8d4c010247f40824ddd4625f0f4d5afa",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "25ca9586619a18b5ea4f1b3f72244086",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "8adbe6ad871ae0091821e7f5a15eaeb5",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "ebcd6e52965fe309f46ff31fca1a2184",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"explanation\">Explanation</h2>\n<span class=\"paragraph\">The pipeline creates all tables needed for analysis. If the database already existed, you can view sample data above and download it. If you generated a new database, all tables have been created and are ready for analysis.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "273233bdd4d031b4c4a5ce4daaa16b4c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "6d71892811762db3dfe29fd168b73148",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"annex\">Annex</h2>\n<span class=\"paragraph\">The BOM-prefix stripper helper function is used to deal with Excel-like artefacts.</span>\n<div class=\"language-python codehilite\"><pre><span></span><code><span class=\"kn\">import</span><span class=\"w\"> </span><span class=\"nn\">tempfile</span>\n<span class=\"kn\">import</span><span class=\"w\"> </span><span class=\"nn\">httpx</span>\n<span class=\"k\">def</span><span class=\"w\"> </span><span class=\"nf\">fetch_with_bom_strip</span><span class=\"p\">(</span><span class=\"n\">url</span><span class=\"p\">:</span> <span class=\"nb\">str</span><span class=\"p\">)</span> <span class=\"o\">-&gt;</span> <span class=\"nb\">str</span><span class=\"p\">:</span>\n    <span class=\"n\">response</span> <span class=\"o\">=</span> <span class=\"n\">httpx</span><span class=\"o\">.</span><span class=\"n\">get</span><span class=\"p\">(</span><span class=\"n\">url</span><span class=\"p\">,</span> <span class=\"n\">timeout</span><span class=\"o\">=</span><span class=\"mi\">60</span><span class=\"p\">,</span> <span class=\"n\">follow_redirects</span><span class=\"o\">=</span><span class=\"kc\">True</span><span class=\"p\">)</span>\n    <span class=\"n\">response</span><span class=\"o\">.</span><span class=\"n\">raise_for_status</span><span class=\"p\">()</span>\n    <span class=\"n\">content</span> <span class=\"o\">=</span> <span class=\"n\">response</span><span class=\"o\">.</span><span class=\"n\">content</span>\n    <span class=\"k\">if</span> <span class=\"n\">content</span><span class=\"o\">.</span><span class=\"n\">startswith</span><span class=\"p\">(</span><span class=\"sa\">b</span><span class=\"s1\">'</span><span class=\"se\">\\xef\\xbb\\xbf</span><span class=\"s1\">'</span><span class=\"p\">):</span>\n        <span class=\"n\">content</span> <span class=\"o\">=</span> <span class=\"n\">content</span><span class=\"p\">[</span><span class=\"mi\">3</span><span class=\"p\">:]</span>\n    <span class=\"n\">text</span> <span class=\"o\">=</span> <span class=\"n\">content</span><span class=\"o\">.</span><span class=\"n\">decode</span><span class=\"p\">(</span><span class=\"s1\">'latin-1'</span><span class=\"p\">)</span>\n    <span class=\"n\">tmp</span> <span class=\"o\">=</span> <span class=\"n\">tempfile</span><span class=\"o\">.</span><span class=\"n\">NamedTemporaryFile</span><span class=\"p\">(</span><span class=\"n\">delete</span><span class=\"o\">=</span><span class=\"kc\">False</span><span class=\"p\">,</span> <span class=\"n\">suffix</span><span class=\"o\">=</span><span class=\"s1\">'.csv'</span><span class=\"p\">,</span> <span class=\"n\">mode</span><span class=\"o\">=</span><span class=\"s1\">'w'</span><span class=\"p\">,</span> <span class=\"n\">encoding</span><span class=\"o\">=</span><span class=\"s1\">'utf-8'</span><span class=\"p\">)</span>\n    <span class=\"n\">tmp</span><span class=\"o\">.</span><span class=\"n\">write</span><span class=\"p\">(</span><span class=\"n\">text</span><span class=\"p\">)</span>\n    <span class=\"n\">tmp</span><span class=\"o\">.</span><span class=\"n\">close</span><span class=\"p\">()</span>\n    <span class=\"k\">return</span> <span class=\"n\">tmp</span><span class=\"o\">.</span><span class=\"n\">name</span>\n</code></pre></div></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}

@@ -52,69 +52,109 @@ def _():
 @app.cell
 def _(mo):
     mo.md("""
-    ## Step 0: Database Setup
+    ## Database Setup
 
-    Connect to DuckDB. If the database file already exists, we'll drop and recreate
-    all tables to ensure a clean, reproducible build.
+    Check for existing database. If it exists, view sample data and download. If not, generate it.
     """)
     return
 
 
 @app.cell
-def _(db_path, duckdb, mo, os):
-    # Check if DB exists - if so, we'll rebuild everything
+def _(db_path, duckdb, os):
+    import marimo as _mo
+    # Check if DB exists
     db_exists = os.path.exists(db_path)
-
     con = duckdb.connect(db_path)
-
+    
     if db_exists:
-        mo.md(f"**Note**: Database file `{db_path}` already exists. All tables will be recreated.")
+        # Try to show sample table
+        try:
+            sample = con.execute("SELECT * FROM pses_analysis LIMIT 5").fetchdf()
+            if sample is not None and len(sample) > 0:
+                db_status = "exists_with_data"
+                sample_table = sample
+            else:
+                raise Exception("No tables")
+        except:
+            db_status = "exists_empty"
+            sample_table = None
     else:
-        mo.md(f"**Creating new database**: `{db_path}`")
-    return (con,)
+        db_status = "not_exists"
+        sample_table = None
+    
+    return con, db_status, sample_table, db_path, duckdb, os
+
+
+@app.cell
+def _(con, db_status, sample_table, db_path):
+    import marimo as _mo
+    # UI elements based on DB status
+    if db_status == "exists_with_data":
+        _mo.ui.table(sample_table)
+        _mo.md(f"**Database exists**: `{db_path}`")
+        download_btn = _mo.ui.button(label="Download Database")
+        run_btn = None
+    elif db_status == "exists_empty":
+        _mo.md(f"**Database exists but is empty**: `{db_path}`")
+        run_btn = _mo.ui.button(label="Generate Database", value=False)
+        download_btn = None
+    else:  # not_exists
+        _mo.md(f"**Database not found**: `{db_path}`")
+        run_btn = _mo.ui.button(label="Generate Database", value=False)
+        download_btn = None
+    
+    return con, run_btn, db_status, db_path
+
+
+@app.cell
+def _(run_btn, db_status):
+    # Read button value - must be in separate cell from creation
+    if db_status == "not_exists" and run_btn is not None:
+        run_pipeline = run_btn.value
+    else:
+        run_pipeline = False
+    return run_pipeline
 
 
 @app.cell
 def _(mo):
     mo.md("""
-    ## Step 1: Data Ingestion
+    ### Data Ingestion
 
-    ### Description
     Download and ingest the main PSES dataset directly from Canada.ca into DuckDB.
 
     **Source**: `https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv`
-
-    **Approach**: DuckDB's `read_csv_auto` function streams the CSV directly from the URL
-    without downloading an intermediate file. This is efficient and handles the
-    Government of Canada's BOM-prefixed, Latin-1 encoded files automatically.
-
-    **Output Table**: `raw_pses` - Complete raw dataset with all columns and rows.
-
-    **Note**: The `ignore_errors=true` parameter allows DuckDB to skip malformed rows,
-    which is important for government datasets that may have data quality issues.
     """)
     return
 
 
 @app.cell
-def _(con, mo):
+def _(con, mo, run_pipeline):
     CSV_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv"
     RAW_TABLE = "raw_pses"
 
-    con.execute(f"DROP TABLE IF EXISTS {RAW_TABLE}")
-    con.execute(f"""
-        CREATE TABLE {RAW_TABLE} AS
-        SELECT *
-        FROM read_csv_auto(
-            '{CSV_URL}',
-            header = true,
-            ignore_errors = true
-        )
-    """)
+    if run_pipeline:
+        con.execute(f"DROP TABLE IF EXISTS {RAW_TABLE}")
+        con.execute(f"""
+            CREATE TABLE {RAW_TABLE} AS
+            SELECT *
+            FROM read_csv_auto(
+                '{CSV_URL}',
+                header = true,
+                ignore_errors = true
+            )
+        """)
 
-    row_count = con.execute(f"SELECT COUNT(*) FROM {RAW_TABLE}").fetchone()[0]
-
-    mo.md(f"**✓ Ingestion Complete**: {row_count:,} rows loaded into `{RAW_TABLE}`")
+        row_count = con.execute(f"SELECT COUNT(*) FROM {RAW_TABLE}").fetchone()[0]
+        mo.md(f"**✓ Ingestion Complete**: {row_count:,} rows loaded into `{RAW_TABLE}`")
+    else:
+        # Use existing table if available
+        try:
+            row_count = con.execute(f"SELECT COUNT(*) FROM {RAW_TABLE}").fetchone()[0]
+            mo.md(f"**Using existing table**: `{RAW_TABLE}` with {row_count:,} rows")
+        except:
+            mo.md(f"*Table `{RAW_TABLE}` not found*")
+    
     return (RAW_TABLE,)
 
 
@@ -148,9 +188,8 @@ def _(RAW_TABLE, con, mo):
 @app.cell
 def _(mo):
     mo.md("""
-    ## Step 2: Theme Mapping
+    ### Theme Mapping
 
-    ### Description
     Load the theme and indicator taxonomy from PSES Subset 1 CSV.
 
     **Source**: `https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv`
@@ -192,16 +231,19 @@ def _():
 
 
 @app.cell
-def _(fetch_with_bom_strip, mo):
-    SUBSET1_URL = (
-        "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/"
-        "ses-2025/subset-1-sous-ensemble-1.csv"
-    )
+def _(fetch_with_bom_strip, run_pipeline, mo):
+    if run_pipeline:
+        SUBSET1_URL = (
+            "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/"
+            "ses-2025/subset-1-sous-ensemble-1.csv"
+        )
 
-    csv_path = fetch_with_bom_strip(SUBSET1_URL)
-
-    mo.md(f"**✓ Fetched theme CSV**: {SUBSET1_URL}")
-    return (csv_path,)
+        csv_path = fetch_with_bom_strip(SUBSET1_URL)
+        mo.md(f"**✓ Fetched theme CSV**: {SUBSET1_URL}")
+        result = csv_path
+    else:
+        result = None
+    return (result,)
 
 
 @app.cell
@@ -215,24 +257,25 @@ def _(mo):
 
 
 @app.cell
-def _(con, csv_path, mo):
-    con.execute("""
-        CREATE OR REPLACE TABLE theme_map AS
-        SELECT DISTINCT ON (QUESTION)
-            QUESTION,
-            TITLE_E,
-            INDICATORID,
-            INDICATORENG,
-            SUBINDICATORID,
-            SUBINDICATORENG
-        FROM read_csv_auto(?, header = true)
-        WHERE LEVEL1ID = '00'
-          AND BYCOND IS NULL
-        ORDER BY QUESTION
-    """, [csv_path])
+def _(con, csv_path, mo, run_pipeline):
+    if run_pipeline and csv_path:
+        con.execute("""
+            CREATE OR REPLACE TABLE theme_map AS
+            SELECT DISTINCT ON (QUESTION)
+                QUESTION,
+                TITLE_E,
+                INDICATORID,
+                INDICATORENG,
+                SUBINDICATORID,
+                SUBINDICATORENG
+            FROM read_csv_auto(?, header = true)
+            WHERE LEVEL1ID = '00'
+              AND BYCOND IS NULL
+            ORDER BY QUESTION
+        """, [csv_path])
 
-    n_theme_map = con.execute("SELECT COUNT(*) FROM theme_map").fetchone()[0]
-    mo.md(f"**✓ theme_map created**: {n_theme_map} rows")
+        n_theme_map = con.execute("SELECT COUNT(*) FROM theme_map").fetchone()[0]
+        mo.md(f"**✓ theme_map created**: {n_theme_map} rows")
     return
 
 
@@ -247,26 +290,27 @@ def _(mo):
 
 
 @app.cell
-def _(con, csv_path, mo):
-    con.execute("""
-        CREATE OR REPLACE TABLE indicator_map AS
-        SELECT DISTINCT
-            INDICATORID,
-            INDICATORENG,
-            SUBINDICATORID,
-            SUBINDICATORENG
-        FROM read_csv_auto(?, header = true)
-        WHERE LEVEL1ID = '00'
-          AND BYCOND IS NULL
-        ORDER BY INDICATORID, SUBINDICATORID
-    """, [csv_path])
+def _(con, csv_path, mo, run_pipeline):
+    if run_pipeline and csv_path:
+        con.execute("""
+            CREATE OR REPLACE TABLE indicator_map AS
+            SELECT DISTINCT
+                INDICATORID,
+                INDICATORENG,
+                SUBINDICATORID,
+                SUBINDICATORENG
+            FROM read_csv_auto(?, header = true)
+            WHERE LEVEL1ID = '00'
+              AND BYCOND IS NULL
+            ORDER BY INDICATORID, SUBINDICATORID
+        """, [csv_path])
 
-    n_indicator = con.execute("SELECT COUNT(*) FROM indicator_map").fetchone()[0]
-    mo.md(f"**✓ indicator_map created**: {n_indicator} rows")
+        n_indicator = con.execute("SELECT COUNT(*) FROM indicator_map").fetchone()[0]
+        mo.md(f"**✓ indicator_map created**: {n_indicator} rows")
 
-    # Clean up temp file
-    import os
-    os.unlink(csv_path)
+        # Clean up temp file
+        import os as _os_cleanup
+        _os_cleanup.unlink(csv_path)
     return
 
 
@@ -300,9 +344,8 @@ def _(con, mo):
 @app.cell
 def _(mo):
     mo.md("""
-    ## Step 3: Data Transformation
+    ### Data Transformation
 
-    ### Description
     Transform the raw data into analytical tables. This step creates three key tables:
 
     - **pses_wog**: Whole-of-government spine (LEVEL1ID=0, LEVEL2ID=0, BYCOND IS NULL)
@@ -364,53 +407,63 @@ def _(mo):
 
 
 @app.cell
-def _(INT_COLS, int_expr, score5_expr, shared_select, con, mo):
-    con.execute(f"""
-        CREATE OR REPLACE TABLE pses_wog AS
-        WITH
-          -- rows that form the whole-of-government spine
-          base AS (
+def _(INT_COLS, int_expr, score5_expr, shared_select, con, mo, run_pipeline):
+    if run_pipeline:
+        con.execute(f"""
+            CREATE OR REPLACE TABLE pses_wog AS
+            WITH
+              -- rows that form the whole-of-government spine
+              base AS (
+                SELECT
+                    {shared_select},
+                    SCORE100  -- raw value still needed for is_scored below
+                FROM raw_pses
+                WHERE LEVEL1ID  = 0
+                  AND LEVEL2ID  = 0
+                  AND BYCOND IS NULL
+              ),
+
+              -- questions present in every one of the 4 survey years
+              stable_questions AS (
+                SELECT QUESTION
+                FROM raw_pses
+                WHERE LEVEL1ID = 0
+                  AND LEVEL2ID = 0
+                  AND BYCOND IS NULL
+                GROUP BY QUESTION
+                HAVING COUNT(DISTINCT SURVEYR) = (
+                    SELECT COUNT(DISTINCT SURVEYR) FROM raw_pses
+                )
+              )
+
             SELECT
-                {shared_select},
-                SCORE100  -- raw value still needed for is_scored below
-            FROM raw_pses
-            WHERE LEVEL1ID  = 0
-              AND LEVEL2ID  = 0
-              AND BYCOND IS NULL
-          ),
+                b.SURVEYR,
+                b.QUESTION,
+                {", ".join(f"b.{c}" for c in INT_COLS)},
+                b.SCORE5,
+                -- is_scored: true when the cleaned SCORE100 is not null
+                NULLIF(CAST(b.SCORE100 AS INTEGER), 9999) IS NOT NULL AS is_scored,
+                -- is_stable: true when this question appeared in all survey years
+                (b.QUESTION IN (SELECT QUESTION FROM stable_questions)) AS is_stable
+            FROM base b
+        """)
 
-          -- questions present in every one of the 4 survey years
-          stable_questions AS (
-            SELECT QUESTION
-            FROM raw_pses
-            WHERE LEVEL1ID = 0
-              AND LEVEL2ID = 0
-              AND BYCOND IS NULL
-            GROUP BY QUESTION
-            HAVING COUNT(DISTINCT SURVEYR) = (
-                SELECT COUNT(DISTINCT SURVEYR) FROM raw_pses
-            )
-          )
+        wog_total = con.execute("SELECT COUNT(*) FROM pses_wog").fetchone()[0]
+        wog_scored = con.execute("SELECT COUNT(DISTINCT QUESTION) FROM pses_wog WHERE is_scored").fetchone()[0]
+        wog_stable = con.execute("SELECT COUNT(DISTINCT QUESTION) FROM pses_wog WHERE is_stable").fetchone()[0]
 
-        SELECT
-            b.SURVEYR,
-            b.QUESTION,
-            {", ".join(f"b.{c}" for c in INT_COLS)},
-            b.SCORE5,
-            -- is_scored: true when the cleaned SCORE100 is not null
-            NULLIF(CAST(b.SCORE100 AS INTEGER), 9999) IS NOT NULL AS is_scored,
-            -- is_stable: true when this question appeared in all survey years
-            (b.QUESTION IN (SELECT QUESTION FROM stable_questions)) AS is_stable
-        FROM base b
-    """)
-
-    wog_total = con.execute("SELECT COUNT(*) FROM pses_wog").fetchone()[0]
-    wog_scored = con.execute("SELECT COUNT(DISTINCT QUESTION) FROM pses_wog WHERE is_scored").fetchone()[0]
-    wog_stable = con.execute("SELECT COUNT(DISTINCT QUESTION) FROM pses_wog WHERE is_stable").fetchone()[0]
-
-    mo.md(f"**✓ pses_wog created**: {wog_total:,} rows")
-    mo.md(f"  - Scored questions: {wog_scored}")
-    mo.md(f"  - Stable across all years: {wog_stable}")
+        mo.md(f"**✓ pses_wog created**: {wog_total:,} rows")
+        mo.md(f"  - Scored questions: {wog_scored}")
+        mo.md(f"  - Stable across all years: {wog_stable}")
+    else:
+        # Use existing table if available
+        try:
+            wog_total = con.execute("SELECT COUNT(*) FROM pses_wog").fetchone()[0]
+            wog_scored = con.execute("SELECT COUNT(DISTINCT QUESTION) FROM pses_wog WHERE is_scored").fetchone()[0]
+            wog_stable = con.execute("SELECT COUNT(DISTINCT QUESTION) FROM pses_wog WHERE is_stable").fetchone()[0]
+            mo.md(f"**Using existing pses_wog**: {wog_total:,} rows")
+        except:
+            mo.md("*pses_wog table not found*")
     return (INT_COLS,)
 
 
@@ -425,26 +478,34 @@ def _(mo):
 
 
 @app.cell
-def _(INT_COLS, int_expr, score5_expr, con, mo):
-    int_exprs = ", ".join(int_expr(c) for c in INT_COLS)
-    score5_expr_sliced = score5_expr
+def _(INT_COLS, int_expr, score5_expr, con, mo, run_pipeline):
+    if run_pipeline:
+        int_exprs = ", ".join(int_expr(c) for c in INT_COLS)
+        score5_expr_sliced = score5_expr
 
-    con.execute(f"""
-        CREATE OR REPLACE TABLE pses_sliced AS
-        SELECT
-            CAST(SURVEYR AS INTEGER) AS SURVEYR,
-            QUESTION,
-            BYCOND,
-            DEMCODE,
-            {int_exprs},
-            {score5_expr_sliced}
-        FROM raw_pses
-        WHERE BYCOND IS NOT NULL
-          AND LEVEL1ID = 0
-    """)
+        con.execute(f"""
+            CREATE OR REPLACE TABLE pses_sliced AS
+            SELECT
+                CAST(SURVEYR AS INTEGER) AS SURVEYR,
+                QUESTION,
+                BYCOND,
+                DEMCODE,
+                {int_exprs},
+                {score5_expr_sliced}
+            FROM raw_pses
+            WHERE BYCOND IS NOT NULL
+              AND LEVEL1ID = 0
+        """)
 
-    sliced_total = con.execute("SELECT COUNT(*) FROM pses_sliced").fetchone()[0]
-    mo.md(f"**✓ pses_sliced created**: {sliced_total:,} rows")
+        sliced_total = con.execute("SELECT COUNT(*) FROM pses_sliced").fetchone()[0]
+        mo.md(f"**✓ pses_sliced created**: {sliced_total:,} rows")
+    else:
+        # Use existing table if available
+        try:
+            sliced_total = con.execute("SELECT COUNT(*) FROM pses_sliced").fetchone()[0]
+            mo.md(f"**Using existing pses_sliced**: {sliced_total:,} rows")
+        except:
+            mo.md("*pses_sliced table not found*")
     return
 
 
@@ -459,31 +520,38 @@ def _(mo):
 
 
 @app.cell
-def _(con, mo):
-    con.execute("""
-        CREATE OR REPLACE TABLE pses_analysis AS
-        SELECT
-            w.*,
-            t.TITLE_E,
-            t.INDICATORID,
-            t.INDICATORENG,
-            t.SUBINDICATORID,
-            t.SUBINDICATORENG
-        FROM pses_wog w
-        INNER JOIN theme_map t ON w.QUESTION = t.QUESTION
-    """)
+def _(con, mo, run_pipeline):
+    if run_pipeline:
+        con.execute("""
+            CREATE OR REPLACE TABLE pses_analysis AS
+            SELECT
+                w.*,
+                t.TITLE_E,
+                t.INDICATORID,
+                t.INDICATORENG,
+                t.SUBINDICATORID,
+                t.SUBINDICATORENG
+            FROM pses_wog w
+            INNER JOIN theme_map t ON w.QUESTION = t.QUESTION
+        """)
 
-    analysis_total = con.execute("SELECT COUNT(*) FROM pses_analysis").fetchone()[0]
-    mo.md(f"**✓ pses_analysis created**: {analysis_total:,} rows")
+        analysis_total = con.execute("SELECT COUNT(*) FROM pses_analysis").fetchone()[0]
+        mo.md(f"**✓ pses_analysis created**: {analysis_total:,} rows")
+    else:
+        # Use existing table if available
+        try:
+            analysis_total = con.execute("SELECT COUNT(*) FROM pses_analysis").fetchone()[0]
+            mo.md(f"**Using existing pses_analysis**: {analysis_total:,} rows")
+        except:
+            mo.md("*pses_analysis table not found*")
     return
 
 
 @app.cell
 def _(mo):
     mo.md("""
-    ## Step 4: Statistical Analysis Tables
+    ### Statistical Analysis Tables
 
-    ### Description
     Compute analytical tables that summarize and analyze the data:
 
     - **theme_scores**: Mean SCORE100 per subtheme per year (72 rows)
@@ -543,33 +611,41 @@ def _(mo):
 
 
 @app.cell
-def _(FSQ, con, mo):
-    con.execute(f"""
-        CREATE OR REPLACE TABLE theme_scores AS
-        SELECT
-            SURVEYR,
-            INDICATORID,
-            INDICATORENG,
-            SUBINDICATORID,
-            SUBINDICATORENG,
-            AVG(SCORE100) AS mean_score
-        FROM pses_analysis
-        WHERE QUESTION IN ({FSQ})
-          AND QUESTION NOT LIKE 'Q73%'
-        GROUP BY
-            SURVEYR,
-            INDICATORID,
-            INDICATORENG,
-            SUBINDICATORID,
-            SUBINDICATORENG
-        ORDER BY
-            INDICATORID,
-            SUBINDICATORID,
-            SURVEYR
-    """)
+def _(FSQ, con, mo, run_pipeline):
+    if run_pipeline:
+        con.execute(f"""
+            CREATE OR REPLACE TABLE theme_scores AS
+            SELECT
+                SURVEYR,
+                INDICATORID,
+                INDICATORENG,
+                SUBINDICATORID,
+                SUBINDICATORENG,
+                AVG(SCORE100) AS mean_score
+            FROM pses_analysis
+            WHERE QUESTION IN ({FSQ})
+              AND QUESTION NOT LIKE 'Q73%'
+            GROUP BY
+                SURVEYR,
+                INDICATORID,
+                INDICATORENG,
+                SUBINDICATORID,
+                SUBINDICATORENG
+            ORDER BY
+                INDICATORID,
+                SUBINDICATORID,
+                SURVEYR
+        """)
 
-    n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
-    mo.md(f"**✓ theme_scores created**: {n_theme_scores} rows")
+        n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
+        mo.md(f"**✓ theme_scores created**: {n_theme_scores} rows")
+    else:
+        # Use existing table if available
+        try:
+            n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
+            mo.md(f"**Using existing theme_scores**: {n_theme_scores} rows")
+        except:
+            mo.md("*theme_scores table not found*")
     return
 
 
@@ -584,32 +660,40 @@ def _(mo):
 
 
 @app.cell
-def _(con, mo):
-    con.execute("""
-        CREATE OR REPLACE TABLE yoy_changes AS
-        SELECT
-            a.SUBINDICATORENG,
-            a.INDICATORENG,
-            a.SURVEYR AS year_from,
-            b.SURVEYR AS year_to,
-            a.mean_score AS score_from,
-            b.mean_score AS score_to,
-            b.mean_score - a.mean_score AS delta
-        FROM theme_scores a
-        JOIN theme_scores b
-          ON a.SUBINDICATORID = b.SUBINDICATORID
-          AND (
-                (a.SURVEYR = 2019 AND b.SURVEYR = 2020)
-             OR (a.SURVEYR = 2020 AND b.SURVEYR = 2022)
-             OR (a.SURVEYR = 2022 AND b.SURVEYR = 2024)
-              )
-        ORDER BY
-            a.SUBINDICATORENG,
-            a.SURVEYR
-    """)
+def _(con, mo, run_pipeline):
+    if run_pipeline:
+        con.execute("""
+            CREATE OR REPLACE TABLE yoy_changes AS
+            SELECT
+                a.SUBINDICATORENG,
+                a.INDICATORENG,
+                a.SURVEYR AS year_from,
+                b.SURVEYR AS year_to,
+                a.mean_score AS score_from,
+                b.mean_score AS score_to,
+                b.mean_score - a.mean_score AS delta
+            FROM theme_scores a
+            JOIN theme_scores b
+              ON a.SUBINDICATORID = b.SUBINDICATORID
+              AND (
+                    (a.SURVEYR = 2019 AND b.SURVEYR = 2020)
+                 OR (a.SURVEYR = 2020 AND b.SURVEYR = 2022)
+                 OR (a.SURVEYR = 2022 AND b.SURVEYR = 2024)
+                  )
+            ORDER BY
+                a.SUBINDICATORENG,
+                a.SURVEYR
+        """)
 
-    n_yoy = con.execute("SELECT COUNT(*) FROM yoy_changes").fetchone()[0]
-    mo.md(f"**✓ yoy_changes created**: {n_yoy} rows")
+        n_yoy = con.execute("SELECT COUNT(*) FROM yoy_changes").fetchone()[0]
+        mo.md(f"**✓ yoy_changes created**: {n_yoy} rows")
+    else:
+        # Use existing table if available
+        try:
+            n_yoy = con.execute("SELECT COUNT(*) FROM yoy_changes").fetchone()[0]
+            mo.md(f"**Using existing yoy_changes**: {n_yoy} rows")
+        except:
+            mo.md("*yoy_changes table not found*")
     return
 
 
@@ -624,66 +708,74 @@ def _(mo):
 
 
 @app.cell
-def _(FSQ, con, mo):
-    import itertools
-    from collections import defaultdict
-    from scipy.stats import pearsonr
+def _(FSQ, con, mo, run_pipeline):
+    if run_pipeline:
+        import itertools
+        from collections import defaultdict
+        from scipy.stats import pearsonr
 
-    # One row per (SURVEYR, QUESTION) - spine is already unique on this key
-    long_rows = con.execute(f"""
-        SELECT SURVEYR, QUESTION, SCORE100
-        FROM pses_analysis
-        WHERE QUESTION IN ({FSQ})
-          AND QUESTION NOT LIKE 'Q73%'
-        ORDER BY QUESTION, SURVEYR
-    """).fetchall()
+        # One row per (SURVEYR, QUESTION) - spine is already unique on this key
+        long_rows = con.execute(f"""
+            SELECT SURVEYR, QUESTION, SCORE100
+            FROM pses_analysis
+            WHERE QUESTION IN ({FSQ})
+              AND QUESTION NOT LIKE 'Q73%'
+            ORDER BY QUESTION, SURVEYR
+        """).fetchall()
 
-    # Build pivot: question -> {year: score}
-    pivot = defaultdict(dict)
-    for surveyr, question, score in long_rows:
-        pivot[question][surveyr] = float(score)
+        # Build pivot: question -> {year: score}
+        pivot = defaultdict(dict)
+        for surveyr, question, score in long_rows:
+            pivot[question][surveyr] = float(score)
 
-    years_list = [2019, 2020, 2022, 2024]
+        years_list = [2019, 2020, 2022, 2024]
 
-    # Keep only questions present in all 4 years
-    questions = sorted(
-        q for q, yr_map in pivot.items()
-        if all(y in yr_map for y in years_list)
-    )
-
-    # Build vectors: question -> list[score] aligned to years
-    vectors = {
-        q: [pivot[q][y] for y in years_list]
-        for q in questions
-    }
-
-    # Compute all pairs
-    corr_rows = []
-    for q_a, q_b in itertools.combinations(questions, 2):
-        v_a = vectors[q_a]
-        v_b = vectors[q_b]
-        try:
-            r, _p = pearsonr(v_a, v_b)
-            corr_rows.append((q_a, q_b, float(r), float(_p)))
-        except Exception:
-            pass  # skip degenerate pairs
-
-    # Write table
-    con.execute("""
-        CREATE OR REPLACE TABLE question_correlations (
-            question_a  VARCHAR,
-            question_b  VARCHAR,
-            pearson_r   DOUBLE,
-            p_value     DOUBLE
+        # Keep only questions present in all 4 years
+        questions = sorted(
+            q for q, yr_map in pivot.items()
+            if all(y in yr_map for y in years_list)
         )
-    """)
-    con.executemany(
-        "INSERT INTO question_correlations VALUES (?, ?, ?, ?)",
-        corr_rows,
-    )
 
-    n_corr = len(corr_rows)
-    mo.md(f"**✓ question_correlations created**: {n_corr:,} rows")
+        # Build vectors: question -> list[score] aligned to years
+        vectors = {
+            q: [pivot[q][y] for y in years_list]
+            for q in questions
+        }
+
+        # Compute all pairs
+        corr_rows = []
+        for q_a, q_b in itertools.combinations(questions, 2):
+            v_a = vectors[q_a]
+            v_b = vectors[q_b]
+            try:
+                r, _p = pearsonr(v_a, v_b)
+                corr_rows.append((q_a, q_b, float(r), float(_p)))
+            except Exception:
+                pass  # skip degenerate pairs
+
+        # Write table
+        con.execute("""
+            CREATE OR REPLACE TABLE question_correlations (
+                question_a  VARCHAR,
+                question_b  VARCHAR,
+                pearson_r   DOUBLE,
+                p_value     DOUBLE
+            )
+        """)
+        con.executemany(
+            "INSERT INTO question_correlations VALUES (?, ?, ?, ?)",
+            corr_rows,
+        )
+
+        n_corr = len(corr_rows)
+        mo.md(f"**✓ question_correlations created**: {n_corr:,} rows")
+    else:
+        # Use existing table if available
+        try:
+            n_corr = con.execute("SELECT COUNT(*) FROM question_correlations").fetchone()[0]
+            mo.md(f"**Using existing question_correlations**: {n_corr:,} rows")
+        except:
+            mo.md("*question_correlations table not found*")
     return
 
 
@@ -698,103 +790,112 @@ def _(mo):
 
 
 @app.cell
-def _(FSQ, con, mo):
-    from scipy.stats import chi2_contingency
+def _(FSQ, con, mo, run_pipeline):
+    if run_pipeline:
+        from scipy.stats import chi2_contingency
 
-    rows = con.execute(f"""
-        SELECT QUESTION, SURVEYR,
-               answer1, answer2, answer3, answer4, answer5,
-               ANSCOUNT
-        FROM pses_analysis
-        WHERE QUESTION IN ({FSQ})
-          AND QUESTION NOT LIKE 'Q73%'
-          AND SURVEYR IN (2019, 2024)
-        ORDER BY QUESTION, SURVEYR
-    """).fetchall()
-
-    # Fetch indicator labels
-    labels = {
-        q: (ie, se)
-        for q, ie, se in con.execute(f"""
-            SELECT DISTINCT QUESTION, INDICATORENG, SUBINDICATORENG
+        rows = con.execute(f"""
+            SELECT QUESTION, SURVEYR,
+                   answer1, answer2, answer3, answer4, answer5,
+                   ANSCOUNT
             FROM pses_analysis
             WHERE QUESTION IN ({FSQ})
               AND QUESTION NOT LIKE 'Q73%'
+              AND SURVEYR IN (2019, 2024)
+            ORDER BY QUESTION, SURVEYR
         """).fetchall()
-    }
 
-    # Collect per-question rows for each year: store (pcts, anscount)
-    data = {}
-    for q, year, a1, a2, a3, a4, a5, anscount in rows:
-        if q not in data:
-            data[q] = {"years": {}}
-        data[q]["years"][year] = ([a1, a2, a3, a4, a5], anscount)
+        # Fetch indicator labels
+        labels = {
+            q: (ie, se)
+            for q, ie, se in con.execute(f"""
+                SELECT DISTINCT QUESTION, INDICATORENG, SUBINDICATORENG
+                FROM pses_analysis
+                WHERE QUESTION IN ({FSQ})
+                  AND QUESTION NOT LIKE 'Q73%'
+            """).fetchall()
+        }
 
-    chi_rows = []
-    for q, info in sorted(data.items()):
-        yr = info["years"]
-        if 2019 not in yr or 2024 not in yr:
-            continue
-        pcts_2019, anscount_2019 = yr[2019]
-        pcts_2024, anscount_2024 = yr[2024]
-        # Skip if any percentage or anscount is NULL
-        if any(v is None for v in pcts_2019 + pcts_2024):
-            continue
-        if anscount_2019 is None or anscount_2024 is None:
-            continue
-        # Reconstruct estimated raw counts from percentages x ANSCOUNT
-        counts_2019 = [round((pct / 100) * anscount_2019) for pct in pcts_2019]
-        counts_2024 = [round((pct / 100) * anscount_2024) for pct in pcts_2024]
-        # Skip if either row sums to zero
-        if sum(counts_2019) == 0 or sum(counts_2024) == 0:
-            continue
-        ind_eng, sub_eng = labels.get(q, ("", ""))
-        try:
-            chi2, p_chi, dof, _ = chi2_contingency([counts_2019, counts_2024])
-            chi_rows.append((
-                q,
-                ind_eng,
-                sub_eng,
-                float(chi2),
-                float(p_chi),
-                int(dof),
-                bool(p_chi < 0.05),
-            ))
-        except Exception:
-            pass
+        # Collect per-question rows for each year: store (pcts, anscount)
+        data = {}
+        for q, year, a1, a2, a3, a4, a5, anscount in rows:
+            if q not in data:
+                data[q] = {"years": {}}
+            data[q]["years"][year] = ([a1, a2, a3, a4, a5], anscount)
 
-    con.execute("""
-        CREATE OR REPLACE TABLE chi_square_results (
-            QUESTION        VARCHAR,
-            INDICATORENG    VARCHAR,
-            SUBINDICATORENG VARCHAR,
-            chi2            DOUBLE,
-            p_value         DOUBLE,
-            dof             INTEGER,
-            significant     BOOLEAN
-        )
-    """)
+        chi_rows = []
+        for q, info in sorted(data.items()):
+            yr = info["years"]
+            if 2019 not in yr or 2024 not in yr:
+                continue
+            pcts_2019, anscount_2019 = yr[2019]
+            pcts_2024, anscount_2024 = yr[2024]
+            # Skip if any percentage or anscount is NULL
+            if any(v is None for v in pcts_2019 + pcts_2024):
+                continue
+            if anscount_2019 is None or anscount_2024 is None:
+                continue
+            # Reconstruct estimated raw counts from percentages x ANSCOUNT
+            counts_2019 = [round((pct / 100) * anscount_2019) for pct in pcts_2019]
+            counts_2024 = [round((pct / 100) * anscount_2024) for pct in pcts_2024]
+            # Skip if either row sums to zero
+            if sum(counts_2019) == 0 or sum(counts_2024) == 0:
+                continue
+            ind_eng, sub_eng = labels.get(q, ("", ""))
+            try:
+                chi2, p_chi, dof, _ = chi2_contingency([counts_2019, counts_2024])
+                chi_rows.append((
+                    q,
+                    ind_eng,
+                    sub_eng,
+                    float(chi2),
+                    float(p_chi),
+                    int(dof),
+                    bool(p_chi < 0.05),
+                ))
+            except Exception:
+                pass
 
-    if chi_rows:
-        con.executemany(
-            "INSERT INTO chi_square_results VALUES (?, ?, ?, ?, ?, ?, ?)",
-            chi_rows,
-        )
+        con.execute("""
+            CREATE OR REPLACE TABLE chi_square_results (
+                QUESTION        VARCHAR,
+                INDICATORENG    VARCHAR,
+                SUBINDICATORENG VARCHAR,
+                chi2            DOUBLE,
+                p_value         DOUBLE,
+                dof             INTEGER,
+                significant     BOOLEAN
+            )
+        """)
+
+        if chi_rows:
+            con.executemany(
+                "INSERT INTO chi_square_results VALUES (?, ?, ?, ?, ?, ?, ?)",
+                chi_rows,
+            )
+        else:
+            mo.md("**Note**: No questions met the criteria for chi-square testing. chi_square_results remain empty.")
+
+        n_chi = len(chi_rows)
+        mo.md(f"**✓ chi_square_results created**: {n_chi} rows")
     else:
-        mo.md("**Note**: No questions met the criteria for chi-square testing. chi_square_results remain empty.")
-
-    n_chi = len(chi_rows)
-    mo.md(f"**✓ chi_square_results created**: {n_chi} rows")
+        # Use existing table if available
+        try:
+            n_chi = con.execute("SELECT COUNT(*) FROM chi_square_results").fetchone()[0]
+            mo.md(f"**Using existing chi_square_results**: {n_chi} rows")
+        except:
+            mo.md("*chi_square_results table not found*")
     return
 
 
 @app.cell
 def _(mo):
     mo.md("""
-    ## Step 5: Pipeline Validation & Summary
+    ## Explanation
 
-    ### Description
-    Verify all tables were created successfully and display summary statistics.
+    The pipeline creates all tables needed for analysis. If the database already existed,
+    you can view sample data above and download it. If you generated a new database,
+    all tables have been created and are ready for analysis.
     """)
     return
 

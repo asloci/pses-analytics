@@ -1,18 +1,18 @@
 {
   "version": "1",
   "metadata": {
-    "marimo_version": "0.23.4",
+    "marimo_version": "0.24.0",
     "script_metadata_hash": null
   },
   "cells": [
     {
       "id": "Hbol",
-      "code_hash": "149609249660c4446bae7f368f737758",
+      "code_hash": "000d03065e220ea9b8d73c6f6fb5a46e",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/plain": ""
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"pses-data-engineering-pipeline\">PSES Data Engineering Pipeline</h1>\n<h2 id=\"overview\">Overview</h2>\n<span class=\"paragraph\">This notebook builds the complete analytical dataset for the Public Service Employee Survey (PSES).\nIt performs the following steps:</span>\n<ol>\n<li><strong>Ingestion</strong>: Downloads the raw PSES CSV from Canada.ca and loads it into DuckDB</li>\n<li><strong>Theme Mapping</strong>: Loads the theme/indicator taxonomy from Subset 1 CSV</li>\n<li><strong>Transformation</strong>: Creates whole-of-government analytical tables</li>\n<li><strong>Statistical Analysis</strong>: Computes theme scores, year-over-year changes, correlations, and chi-square tests</li>\n</ol>\n<span class=\"paragraph\"><strong>Output</strong>: All tables are written to <code>data/pses.duckdb</code></span>\n<span class=\"paragraph\"><strong>Reproducibility</strong>: Any user can run this notebook from scratch to rebuild all analytical tables.\nIf <code>data/pses.duckdb</code> already exists, it will be overwritten to ensure a clean build.</span>\n<span class=\"paragraph\"><strong>Data Source</strong>: </span>\n<ul>\n<li>Main dataset: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv</a></li>\n<li>Theme taxonomy: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv</a></li>\n</ul>\n<span class=\"paragraph\"><strong>Note on Government of Canada CSV files</strong>: They are BOM-prefixed and Latin-1 encoded.</span></span>"
           }
         }
       ],
@@ -20,7 +20,7 @@
     },
     {
       "id": "MJUe",
-      "code_hash": "20b34456af2aed6b15c78cff21f81bd0",
+      "code_hash": "7b40a1e46b2843be141fd839b98e3f7c",
       "outputs": [
         {
           "type": "data",
@@ -33,12 +33,12 @@
     },
     {
       "id": "vblA",
-      "code_hash": "cafb2a473012d6e037277e7eae55ce6d",
+      "code_hash": "43d3574a1a2c58538197bae3d6b5a3c5",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>\u2713 Ingestion Complete</strong>: 12,179,345 rows loaded into <code>raw_pses</code></span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"database-setup\">Database Setup</h2>\n<span class=\"paragraph\">Check for existing database. If it exists, view sample data and download. If not, generate it.</span></span>"
           }
         }
       ],
@@ -46,7 +46,85 @@
     },
     {
       "id": "bkHC",
-      "code_hash": "2d8341ab2aebd770d4d2688c60c29360",
+      "code_hash": "8c7b87edcfd363f8229a278c9177b7cd",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "3ab11b85d6efe6d597bc52318ed49502",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "d8fd30162012a50204442a094e808c5d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "f1a854efadf9de6a63b6b5dc89f29c8b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"data-ingestion\">Data Ingestion</h3>\n<span class=\"paragraph\">Download and ingest the main PSES dataset directly from Canada.ca into DuckDB.</span>\n<span class=\"paragraph\"><strong>Source</strong>: <code>https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv</code></span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "4a37babd578b8f386ff8454757c94c8c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "7c0edb02ccaa6f82c5e0a3f1840e6895",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"ingestion-verification\">Ingestion Verification</h3>\n<span class=\"paragraph\">Let's verify the ingestion by checking the schema and some basic statistics.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "5252fb0f3976ce4ed49a3daf1da9bb8f",
       "outputs": [
         {
           "type": "data",
@@ -58,78 +136,13 @@
       "console": []
     },
     {
-      "id": "lEQa",
-      "code_hash": "ba3822587360c0391427b4508110e9b5",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>\u2713 Fetched theme CSV</strong>: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv</a></span></span>"
-          }
-        }
-      ],
-      "console": []
-    },
-    {
-      "id": "PKri",
-      "code_hash": "68221a2277e70b381a38d77680d84ccc",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>\u2713 theme_map created</strong>: 207 rows</span></span>"
-          }
-        }
-      ],
-      "console": []
-    },
-    {
-      "id": "Xref",
-      "code_hash": "83350c966d9848876def073171dd0dfb",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
-      "console": []
-    },
-    {
-      "id": "SFPL",
-      "code_hash": "0be9767c21a7be27e2058cb036d79570",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
-      "console": []
-    },
-    {
-      "id": "RGSE",
-      "code_hash": "2878c3888e4772fcde366ad62a14508a",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><ul>\n<li>Stable across all years: 175</li>\n</ul></span>"
-          }
-        }
-      ],
-      "console": []
-    },
-    {
       "id": "Kclp",
-      "code_hash": "3fd68168c5a0113fcb62b9745921445e",
+      "code_hash": "1d14e7a97897fbc57869aa0fc7809ff1",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>\u2713 pses_sliced created</strong>: 651,295 rows</span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"theme-mapping\">Theme Mapping</h3>\n<span class=\"paragraph\">Load the theme and indicator taxonomy from PSES Subset 1 CSV.</span>\n<span class=\"paragraph\"><strong>Source</strong>: <code>https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv</code></span>\n<span class=\"paragraph\"><strong>Output Tables</strong>:</span>\n<ul>\n<li><code>theme_map</code>: One row per QUESTION with its theme/subtheme labels (207 rows)</li>\n<li><code>indicator_map</code>: Distinct indicator/sub-indicator combinations - a lookup table (23 rows)</li>\n</ul>\n<span class=\"paragraph\"><strong>Filter</strong>: We only load rows where LEVEL1ID = '00' and BYCOND IS NULL, which gives us\nthe whole-of-government (WOG) theme taxonomy.</span>\n<span class=\"paragraph\"><strong>Note</strong>: Government of Canada CSV files require special handling for BOM and encoding.\nWe use a helper function to fetch, strip BOM, and decode from Latin-1 to UTF-8.</span></span>"
           }
         }
       ],
@@ -137,12 +150,12 @@
     },
     {
       "id": "emfo",
-      "code_hash": "0567503ecc951ad565ee32728124defb",
+      "code_hash": "da86dedcf113333e79927d940c1e7793",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>\u2713 pses_analysis created</strong>: 772 rows</span></span>"
+            "text/plain": ""
           }
         }
       ],
@@ -150,7 +163,7 @@
     },
     {
       "id": "Hstk",
-      "code_hash": "7122339b794adc089c3851eb6b8d8b07",
+      "code_hash": "2951248989106f5e898bd1c326dd0e1f",
       "outputs": [
         {
           "type": "data",
@@ -163,12 +176,12 @@
     },
     {
       "id": "nWHF",
-      "code_hash": "866c266777eaf8f35d681a73b3d759b8",
+      "code_hash": "6146d3d3fbe8091669f8bd31ab43be3e",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>\u2713 theme_scores created</strong>: 72 rows</span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"build-theme_map-table\">Build theme_map table</h3>\n<span class=\"paragraph\">One row per QUESTION with theme/subtheme metadata.</span></span>"
           }
         }
       ],
@@ -176,12 +189,12 @@
     },
     {
       "id": "iLit",
-      "code_hash": "e62af366b2d7ed8824d695036b869ba6",
+      "code_hash": "c4e3fbeb55b3ca4ae89ec352a248e9c3",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>\u2713 yoy_changes created</strong>: 54 rows</span></span>"
+            "text/plain": ""
           }
         }
       ],
@@ -189,12 +202,12 @@
     },
     {
       "id": "ZHCJ",
-      "code_hash": "6fc3197f2b9252fb60f3b603c18837aa",
+      "code_hash": "57f4b9a6ce576379a3788727be24ad17",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>\u2713 question_correlations created</strong>: 1,711 rows</span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"build-indicator_map-table\">Build indicator_map table</h3>\n<span class=\"paragraph\">Distinct indicator/sub-indicator combinations - serves as a lookup reference.</span></span>"
           }
         }
       ],
@@ -202,12 +215,12 @@
     },
     {
       "id": "ROlb",
-      "code_hash": "dae8ca5ba4037d9c24042e972632c417",
+      "code_hash": "684ddbc92ca0c0e062540fd0f0b882b5",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>\u2713 chi_square_results created</strong>: 59 rows</span></span>"
+            "text/plain": ""
           }
         }
       ],
@@ -215,7 +228,280 @@
     },
     {
       "id": "qnkX",
-      "code_hash": "22853ee6248e1ea17c60d9c8e545c29d",
+      "code_hash": "25121027130a7e39da1cdb336795c52f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"theme-taxonomy-summary\">Theme Taxonomy Summary</h3>\n<span class=\"paragraph\">Let's preview the theme structure to verify the mapping loaded correctly.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "077972660259a71d0e04dd7bc12f05d1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "9e6b6f4b80aba12e7c3fd1c74e7e304e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"data-transformation\">Data Transformation</h3>\n<span class=\"paragraph\">Transform the raw data into analytical tables. This step creates three key tables:</span>\n<ul>\n<li><strong>pses_wog</strong>: Whole-of-government spine (LEVEL1ID=0, LEVEL2ID=0, BYCOND IS NULL)<ul>\n<li>Contains typed columns with 9999\u2192NULL conversion for scoring fields</li>\n<li>Includes <code>is_scored</code> and <code>is_stable</code> flags</li>\n<li>~772 rows (one per question per year for WOG)</li>\n</ul>\n</li>\n<li><strong>pses_sliced</strong>: Whole-of-government demographic/org slices (LEVEL1ID=0, BYCOND IS NOT NULL)<ul>\n<li>Contains the same scoring columns as pses_wog</li>\n<li>~651K rows</li>\n</ul>\n</li>\n<li><strong>pses_analysis</strong>: Primary analytical table - joins pses_wog with theme_map<ul>\n<li>Adds theme/subtheme metadata to the WOG spine</li>\n<li>~772 rows</li>\n</ul>\n</li>\n</ul>\n<span class=\"paragraph\"><strong>Scoring Columns</strong>: The following columns use 9999 as a sentinel for \"missing\" and are\nconverted to INTEGER with NULL for 9999:</span>\n<ul>\n<li>SCORE100, ANSCOUNT, POSITIVE, NEUTRAL, NEGATIVE, AGREE</li>\n<li>answer1-answer7</li>\n</ul>\n<span class=\"paragraph\"><strong>SCORE5</strong>: Converted to DOUBLE with NULL for 9999.0</span>\n<span class=\"paragraph\"><strong>is_scored</strong>: TRUE when the cleaned SCORE100 is not null\n<strong>is_stable</strong>: TRUE when the question appeared in all survey years</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "250007e675f1695f873e804388611125",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "9207ec383af960742f6cad6e9f1d84bc",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"create-pses_wog-table\">Create pses_wog table</h3>\n<span class=\"paragraph\">Whole-of-government spine with cleaned, typed columns.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "b5d55c106ee0da65684c52075052e9ff",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "92084984f2674bf31a432df9b2fa53e3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"create-pses_sliced-table\">Create pses_sliced table</h3>\n<span class=\"paragraph\">Whole-of-government demographic/org slices.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "93d8ee5ad674f959994ee377c7803c74",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "aLJB",
+      "code_hash": "aab34a11f0ca415d29ede3f08b581e0e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"create-pses_analysis-table\">Create pses_analysis table</h3>\n<span class=\"paragraph\">Primary analytical table - joins pses_wog with theme_map to add theme metadata.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nHfw",
+      "code_hash": "b7d6361b0e3d8ec1c9cb89ef64f764e3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "xXTn",
+      "code_hash": "6bc23e182a48ea2636564a82e9e7fe32",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"statistical-analysis-tables\">Statistical Analysis Tables</h3>\n<span class=\"paragraph\">Compute analytical tables that summarize and analyze the data:</span>\n<ul>\n<li><strong>theme_scores</strong>: Mean SCORE100 per subtheme per year (72 rows)<ul>\n<li>Used for trend analysis across survey cycles</li>\n<li>Only includes fully scored questions (SCORE100 non-null in all 4 years)</li>\n</ul>\n</li>\n<li><strong>yoy_changes</strong>: Year-over-year delta in mean_score per subtheme (54 rows)<ul>\n<li>Compares: 2019\u21922020, 2020\u21922022, 2022\u21922024</li>\n<li>Allows tracking of trends between survey cycles</li>\n</ul>\n</li>\n<li><strong>question_correlations</strong>: Pearson r between every stable question pair (~1,711 rows)<ul>\n<li>Helps identify question clusters and construct validity</li>\n<li>Note: With only 4 years (n=4), correlations should be interpreted cautiously</li>\n</ul>\n</li>\n<li><strong>chi_square_results</strong>: Chi-square test on answer1-5 distribution 2019 vs 2024 (59 rows)<ul>\n<li>Tests whether response distributions have changed significantly</li>\n<li>With ~186,000 respondents, even small shifts are detectable</li>\n</ul>\n</li>\n</ul>\n<span class=\"paragraph\"><strong>Longitudinal Filter</strong>: All analytical tables use the following filter to ensure\nonly questions that are scored in ALL four years (2019, 2020, 2022, 2024) are included:\n<div class=\"language-sql codehilite\"><pre><span></span><code><span class=\"n\">QUESTION</span><span class=\"w\"> </span><span class=\"k\">IN</span><span class=\"w\"> </span><span class=\"p\">(</span>\n<span class=\"w\">    </span><span class=\"k\">SELECT</span><span class=\"w\"> </span><span class=\"n\">QUESTION</span><span class=\"w\"> </span><span class=\"k\">FROM</span><span class=\"w\"> </span><span class=\"n\">pses_analysis</span>\n<span class=\"w\">    </span><span class=\"k\">WHERE</span><span class=\"w\"> </span><span class=\"n\">is_stable</span><span class=\"w\"> </span><span class=\"o\">=</span><span class=\"w\"> </span><span class=\"k\">true</span>\n<span class=\"w\">    </span><span class=\"k\">GROUP</span><span class=\"w\"> </span><span class=\"k\">BY</span><span class=\"w\"> </span><span class=\"n\">QUESTION</span>\n<span class=\"w\">    </span><span class=\"k\">HAVING</span><span class=\"w\"> </span><span class=\"k\">COUNT</span><span class=\"p\">(</span><span class=\"k\">CASE</span><span class=\"w\"> </span><span class=\"k\">WHEN</span><span class=\"w\"> </span><span class=\"n\">SCORE100</span><span class=\"w\"> </span><span class=\"k\">IS</span><span class=\"w\"> </span><span class=\"k\">NOT</span><span class=\"w\"> </span><span class=\"k\">NULL</span><span class=\"w\"> </span><span class=\"k\">THEN</span><span class=\"w\"> </span><span class=\"mi\">1</span><span class=\"w\"> </span><span class=\"k\">END</span><span class=\"p\">)</span><span class=\"w\"> </span><span class=\"o\">=</span><span class=\"w\"> </span><span class=\"mi\">4</span>\n<span class=\"p\">)</span>\n</code></pre></div></span>\n<span class=\"paragraph\"><strong>Q73 Exclusion</strong>: Q73a-Q73w are 2024-only stress sub-questions and are excluded from\nlongitudinal analysis. Only Q74 and Q75 are valid stress trend questions.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "AjVT",
+      "code_hash": "1799361187dc7021c6a083a397066123",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "pHFh",
+      "code_hash": "256c41df7c0f3c486ddb15f048ee09d3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"create-theme_scores-table\">Create theme_scores table</h3>\n<span class=\"paragraph\">Mean SCORE100 per subtheme per year for longitudinal analysis.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "NCOB",
+      "code_hash": "a7de45e46b0495f3c0547fd7a37b7730",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "aqbW",
+      "code_hash": "cf3684f1cdac1ab6e74c2870c9df55f4",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"create-yoy_changes-table\">Create yoy_changes table</h3>\n<span class=\"paragraph\">Year-over-year delta in mean_score per subtheme.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TRpd",
+      "code_hash": "3e206ecde5b17466f367310b4164b3de",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TXez",
+      "code_hash": "deb84938436a9e8884a58227b5f2f4ca",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"create-question_correlations-table\">Create question_correlations table</h3>\n<span class=\"paragraph\">Pearson r between every stable question pair (Python-side computation with scipy).</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "dNNg",
+      "code_hash": "cac936425424d726cc3e38219d5b4425",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "yCnT",
+      "code_hash": "ba48466c15265bfac82b9c6f24e4e3e0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"create-chi_square_results-table\">Create chi_square_results table</h3>\n<span class=\"paragraph\">Chi-square test on answer1-5 distribution between 2019 and 2024 (Python-side with scipy).</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "wlCL",
+      "code_hash": "5ded6e5c02ab9a3186651b7bb9d7abe2",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "kqZH",
+      "code_hash": "dfdfed633e4f393d76ee7027f80890c0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"explanation\">Explanation</h2>\n<span class=\"paragraph\">The pipeline creates all tables needed for analysis. If the database already existed,\nyou can view sample data above and download it. If you generated a new database,\nall tables have been created and are ready for analysis.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "wAgl",
+      "code_hash": "26cb31f13e331d04e49fe1665576393f",
       "outputs": [
         {
           "type": "data",
