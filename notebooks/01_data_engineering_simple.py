@@ -104,32 +104,27 @@ def _(con, mo):
 
     table_stats, total_elapsed = get_statistics()
 
-    # Display results
-    mo.md(f"**Total query time**: {round(total_elapsed * 1000, 2)} ms")
-    return
+    # Return variables for downstream use
+    return table_stats, total_elapsed
 
 
 @app.cell
-def _(mo):
-    mo.md("""
-    ### Database Statistics
-
-    | Table | Rows | Count Time (ms) |
-    |-------|------|-----------------|
-    | chi_square_results | 59 | 0.14 |
-    | indicator_map | 23 | 0.09 |
-    | pses_analysis | 772 | 0.09 |
-    | pses_sliced | 651,295 | 0.08 |
-    | pses_wog | 772 | 0.08 |
-    | question_correlations | 1,711 | 0.07 |
-    | raw_pses | 12,179,345 | 0.08 |
-    | theme_map | 207 | 0.07 |
-    | theme_scores | 72 | 0.07 |
-    | yoy_changes | 54 | 0.07 |
+def _(table_stats, total_elapsed, mo):
+    # Generate markdown table from variables
+    md_rows = "\n".join([
+        f"| {stat['table']} | {stat['rows']:,} | {stat['count_time_ms']} |"
+        for stat in table_stats
+    ])
     
-    **Total query time**: ~2 ms
-    """)
-    return
+    return mo.md(f"""### Database Statistics
+
+| Table | Rows | Count Time (ms) |
+|-------|------|-----------------|
+{md_rows}
+
+**Total query time**: {round(total_elapsed * 1000, 2)} ms
+""")
+
 
 
 @app.cell

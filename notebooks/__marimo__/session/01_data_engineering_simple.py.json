@@ -58,21 +58,14 @@
     },
     {
       "id": "PKri",
-      "code_hash": "f8ca90f0be810a9273cc8cda6fa9ab29",
+      "code_hash": "e495a10467795ec30ad58c1e5060b233",
       "outputs": [],
       "console": []
     },
     {
       "id": "Xref",
-      "code_hash": "eb8d82ccb9a34f160293f419a9c212a8",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"database-statistics\">Database Statistics</h3>\n<table>\n<thead>\n<tr>\n<th>Table</th>\n<th>Rows</th>\n<th>Count Time (ms)</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>chi_square_results</td>\n<td>59</td>\n<td>0.14</td>\n</tr>\n<tr>\n<td>indicator_map</td>\n<td>23</td>\n<td>0.09</td>\n</tr>\n<tr>\n<td>pses_analysis</td>\n<td>772</td>\n<td>0.09</td>\n</tr>\n<tr>\n<td>pses_sliced</td>\n<td>651,295</td>\n<td>0.08</td>\n</tr>\n<tr>\n<td>pses_wog</td>\n<td>772</td>\n<td>0.08</td>\n</tr>\n<tr>\n<td>question_correlations</td>\n<td>1,711</td>\n<td>0.07</td>\n</tr>\n<tr>\n<td>raw_pses</td>\n<td>12,179,345</td>\n<td>0.08</td>\n</tr>\n<tr>\n<td>theme_map</td>\n<td>207</td>\n<td>0.07</td>\n</tr>\n<tr>\n<td>theme_scores</td>\n<td>72</td>\n<td>0.07</td>\n</tr>\n<tr>\n<td>yoy_changes</td>\n<td>54</td>\n<td>0.07</td>\n</tr>\n</tbody>\n</table>\n<span class=\"paragraph\"><strong>Total query time</strong>: ~2 ms</span></span>"
-          }
-        }
-      ],
+      "code_hash": "ccdaf69822da973cf519bf8d464f4f51",
+      "outputs": [],
       "console": []
     },
     {
