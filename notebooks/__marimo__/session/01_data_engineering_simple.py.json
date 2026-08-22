@@ -6,7 +6,7 @@
   },
   "cells": [
     {
-      "id": "hZxa",
+      "id": "Hbol",
       "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
       "outputs": [
         {
@@ -19,13 +19,13 @@
       "console": []
     },
     {
-      "id": "Hbol",
+      "id": "MJUe",
       "code_hash": "8de025979e3ac3f1a84b49a1d4d9df75",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"data-engineering-notebook-for-the-government-of-canada-public-service-employee-survey-pses\">Data Engineering \ud83c\udf0a\ud83c\udf43 Notebook for the Government of Canada Public Service Employee Survey (PSES)</h1>\n<h2 id=\"summary\">Summary</h2>\n<span class=\"paragraph\">This notebook ingested and built an analytical dataset to display Public Service Employee Survey (PSES) results for longitudinal analysis across themes and sub-themes.</span>\n<span class=\"paragraph\">It performed the following steps:</span>\n<ol>\n<li><strong>Ingestion</strong>: Downloaded the raw PSES CSV and converted it into <a href=\"https://duckdb.org/\" rel=\"noopener noreferrer\" target=\"_blank\">DuckDB</a> format</li>\n<li><strong>Theme Mapping</strong>: Loaded the theme/indicator taxonomy from Subset 1 CSV<sup id=\"fnref:11-1\"><a class=\"footnote-ref\" href=\"#fn:11-1\">1</a></sup></li>\n<li><strong>Transformation</strong>: Created whole-of-government analytical tables</li>\n<li><strong>Statistical Analysis</strong>: Computed theme scores, year-over-year changes</li>\n</ol>\n<span class=\"paragraph\"><strong>Output</strong>:</span>\n<span class=\"paragraph\">All tables were written to <code>data/pses.duckdb</code>. If you do not see sample data in <a href=\"#results\">Results</a>, you can generate the database using this notebook.</span>\n<span class=\"paragraph\"><strong>Reproducibility</strong>:</span>\n<span class=\"paragraph\">Any user can run this notebook using the following steps:</span>\n<ul>\n<li><strong><em>insert instructions on uv and code execution</em></strong></li>\n</ul>\n<span class=\"paragraph\"><strong>Data Source</strong>:</span>\n<ul>\n<li>Main dataset: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv</a></li>\n<li>Theme taxonomy: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv</a></li>\n</ul>\n<div class=\"footnote\">\n<hr />\n<ol>\n<li id=\"fn:11-1\">This file contains characters out of range for the UTF-8 encoding. <a href=\"#annex\">Annex</a> contains the helper function that deals with the BOM-prefixed, Latin-1 encoded file in question.&#160;<a class=\"footnote-backref\" href=\"#fnref:11-1\" title=\"Jump back to footnote 1 in the text\">&#8617;</a></li>\n</ol>\n</div></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"data-engineering-notebook-for-the-government-of-canada-public-service-employee-survey-pses\">Data Engineering \ud83c\udf0a\ud83c\udf43 Notebook for the Government of Canada Public Service Employee Survey (PSES)</h1>\n<h2 id=\"summary\">Summary</h2>\n<span class=\"paragraph\">This notebook ingested and built an analytical dataset to display Public Service Employee Survey (PSES) results for longitudinal analysis across themes and sub-themes.</span>\n<span class=\"paragraph\">It performed the following steps:</span>\n<ol>\n<li><strong>Ingestion</strong>: Downloaded the raw PSES CSV and converted it into <a href=\"https://duckdb.org/\" rel=\"noopener noreferrer\" target=\"_blank\">DuckDB</a> format</li>\n<li><strong>Theme Mapping</strong>: Loaded the theme/indicator taxonomy from Subset 1 CSV<sup id=\"fnref:8-1\"><a class=\"footnote-ref\" href=\"#fn:8-1\">1</a></sup></li>\n<li><strong>Transformation</strong>: Created whole-of-government analytical tables</li>\n<li><strong>Statistical Analysis</strong>: Computed theme scores, year-over-year changes</li>\n</ol>\n<span class=\"paragraph\"><strong>Output</strong>:</span>\n<span class=\"paragraph\">All tables were written to <code>data/pses.duckdb</code>. If you do not see sample data in <a href=\"#results\">Results</a>, you can generate the database using this notebook.</span>\n<span class=\"paragraph\"><strong>Reproducibility</strong>:</span>\n<span class=\"paragraph\">Any user can run this notebook using the following steps:</span>\n<ul>\n<li><strong><em>insert instructions on uv and code execution</em></strong></li>\n</ul>\n<span class=\"paragraph\"><strong>Data Source</strong>:</span>\n<ul>\n<li>Main dataset: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv</a></li>\n<li>Theme taxonomy: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv</a></li>\n</ul>\n<div class=\"footnote\">\n<hr />\n<ol>\n<li id=\"fn:8-1\">This file contains characters out of range for the UTF-8 encoding. <a href=\"#annex\">Annex</a> contains the helper function that deals with the BOM-prefixed, Latin-1 encoded file in question.&#160;<a class=\"footnote-backref\" href=\"#fnref:8-1\" title=\"Jump back to footnote 1 in the text\">&#8617;</a></li>\n</ol>\n</div></span>"
           }
         }
       ],
@@ -33,12 +33,12 @@
     },
     {
       "id": "vblA",
-      "code_hash": "dbd063984f76b7e7f75049507ee77be8",
+      "code_hash": "8f383f5e6ed64b48bab05501d01f6390",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"results\">Results</h2>\n<span class=\"paragraph\">Once the database has been built, you can view a sample from the whole-of-government analytical table as follows: \n<div class=\"language-sql codehilite\"><pre><span></span><code><span class=\"k\">SELECT</span><span class=\"w\"> </span><span class=\"o\">*</span><span class=\"w\"> </span><span class=\"k\">FROM</span><span class=\"w\"> </span><span class=\"n\">pses_wog</span><span class=\"w\"> </span><span class=\"k\">LIMIT</span><span class=\"w\"> </span><span class=\"mi\">50</span>\n</code></pre></div></span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"results\">Results</h2>\n<span class=\"paragraph\">Once the database has been built, you can view a sample from the whole-of-government analytical table as follows:\n<div class=\"language-sql codehilite\"><pre><span></span><code><span class=\"k\">SELECT</span><span class=\"w\"> </span><span class=\"o\">*</span><span class=\"w\"> </span><span class=\"k\">FROM</span><span class=\"w\"> </span><span class=\"n\">pses_wog</span><span class=\"w\"> </span><span class=\"k\">LIMIT</span><span class=\"w\"> </span><span class=\"mi\">50</span>\n</code></pre></div></span></span>"
           }
         }
       ],
@@ -58,20 +58,33 @@
       "console": []
     },
     {
-      "id": "WxZl",
+      "id": "lEQa",
       "code_hash": "09b45a0bba97f4a89865780781ae3bef",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/html": "<marimo-ui-element object-id='WxZl-0' random-id='50e04053-88b8-f087-3269-6f30fb7b7a6d'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;SURVEYR&#92;&quot;:2020,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q01&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:76,&#92;&quot;ANSCOUNT&#92;&quot;:188350,&#92;&quot;POSITIVE&#92;&quot;:83,&#92;&quot;NEUTRAL&#92;&quot;:4,&#92;&quot;NEGATIVE&#92;&quot;:13,&#92;&quot;AGREE&#92;&quot;:83,&#92;&quot;answer1&#92;&quot;:37,&#92;&quot;answer2&#92;&quot;:45,&#92;&quot;answer3&#92;&quot;:4,&#92;&quot;answer4&#92;&quot;:10,&#92;&quot;answer5&#92;&quot;:3,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:4.04,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:false},{&#92;&quot;SURVEYR&#92;&quot;:2022,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q01&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:78,&#92;&quot;ANSCOUNT&#92;&quot;:189360,&#92;&quot;POSITIVE&#92;&quot;:84,&#92;&quot;NEUTRAL&#92;&quot;:4,&#92;&quot;NEGATIVE&#92;&quot;:12,&#92;&quot;AGREE&#92;&quot;:84,&#92;&quot;answer1&#92;&quot;:43,&#92;&quot;answer2&#92;&quot;:41,&#92;&quot;answer3&#92;&quot;:4,&#92;&quot;answer4&#92;&quot;:9,&#92;&quot;answer5&#92;&quot;:4,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:4.1,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:false},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q01&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:74,&#92;&quot;ANSCOUNT&#92;&quot;:186345,&#92;&quot;POSITIVE&#92;&quot;:79,&#92;&quot;NEUTRAL&#92;&quot;:5,&#92;&quot;NEGATIVE&#92;&quot;:16,&#92;&quot;AGREE&#92;&quot;:79,&#92;&quot;answer1&#92;&quot;:36,&#92;&quot;answer2&#92;&quot;:43,&#92;&quot;answer3&#92;&quot;:5,&#92;&quot;answer4&#92;&quot;:11,&#92;&quot;answer5&#92;&quot;:5,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:3.94,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:false},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q02&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:88,&#92;&quot;ANSCOUNT&#92;&quot;:186420,&#92;&quot;POSITIVE&#92;&quot;:88,&#92;&quot;NEUTRAL&#92;&quot;:5,&#92;&quot;NEGATIVE&#92;&quot;:7,&#92;&quot;AGREE&#92;&quot;:88,&#92;&quot;answer1&#92;&quot;:70,&#92;&quot;answer2&#92;&quot;:16,&#92;&quot;answer3&#92;&quot;:5,&#92;&quot;answer4&#92;&quot;:4,&#92;&quot;answer5&#92;&quot;:3,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:2,&#92;&quot;SCORE5&#92;&quot;:4.5,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:false},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q03&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:85,&#92;&quot;ANSCOUNT&#92;&quot;:186270,&#92;&quot;POSITIVE&#92;&quot;:85,&#92;&quot;NEUTRAL&#92;&quot;:6,&#92;&quot;NEGATIVE&#92;&quot;:9,&#92;&quot;AGREE&#92;&quot;:85,&#92;&quot;answer1&#92;&quot;:65,&#92;&quot;answer2&#92;&quot;:17,&#92;&quot;answer3&#92;&quot;:6,&#92;&quot;answer4&#92;&quot;:6,&#92;&quot;answer5&#92;&quot;:3,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:2,&#92;&quot;SCORE5&#92;&quot;:4.39,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:false},{&#92;&quot;SURVEYR&#92;&quot;:2019,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q04&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:75,&#92;&quot;ANSCOUNT&#92;&quot;:181460,&#92;&quot;POSITIVE&#92;&quot;:78,&#92;&quot;NEUTRAL&#92;&quot;:7,&#92;&quot;NEGATIVE&#92;&quot;:15,&#92;&quot;AGREE&#92;&quot;:78,&#92;&quot;answer1&#92;&quot;:43,&#92;&quot;answer2&#92;&quot;:35,&#92;&quot;answer3&#92;&quot;:7,&#92;&quot;answer4&#92;&quot;:10,&#92;&quot;answer5&#92;&quot;:5,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:4.0,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:true},{&#92;&quot;SURVEYR&#92;&quot;:2020,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q04&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:75,&#92;&quot;ANSCOUNT&#92;&quot;:188105,&#92;&quot;POSITIVE&#92;&quot;:78,&#92;&quot;NEUTRAL&#92;&quot;:9,&#92;&quot;NEGATIVE&#92;&quot;:14,&#92;&quot;AGREE&#92;&quot;:78,&#92;&quot;answer1&#92;&quot;:39,&#92;&quot;answer2&#92;&quot;:38,&#92;&quot;answer3&#92;&quot;:9,&#92;&quot;answer4&#92;&quot;:10,&#92;&quot;answer5&#92;&quot;:3,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:4.0,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:true},{&#92;&quot;SURVEYR&#92;&quot;:2022,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q04&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:78,&#92;&quot;ANSCOUNT&#92;&quot;:189140,&#92;&quot;POSITIVE&#92;&quot;:80,&#92;&quot;NEUTRAL&#92;&quot;:7,&#92;&quot;NEGATIVE&#92;&quot;:13,&#92;&quot;AGREE&#92;&quot;:80,&#92;&quot;answer1&#92;&quot;:49,&#92;&quot;answer2&#92;&quot;:31,&#92;&quot;answer3&#92;&quot;:7,&#92;&quot;answer4&#92;&quot;:8,&#92;&quot;answer5&#92;&quot;:5,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:1,&#92;&quot;SCORE5&#92;&quot;:4.12,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:true},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q04&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:66,&#92;&quot;ANSCOUNT&#92;&quot;:186145,&#92;&quot;POSITIVE&#92;&quot;:65,&#92;&quot;NEUTRAL&#92;&quot;:9,&#92;&quot;NEGATIVE&#92;&quot;:26,&#92;&quot;AGREE&#92;&quot;:65,&#92;&quot;answer1&#92;&quot;:35,&#92;&quot;answer2&#92;&quot;:30,&#92;&quot;answer3&#92;&quot;:9,&#92;&quot;answer4&#92;&quot;:14,&#92;&quot;answer5&#92;&quot;:12,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:1,&#92;&quot;SCORE5&#92;&quot;:3.62,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:true},{&#92;&quot;SURVEYR&#92;&quot;:2019,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q05&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:68,&#92;&quot;ANSCOUNT&#92;&quot;:181030,&#92;&quot;POSITIVE&#92;&quot;:69,&#92;&quot;NEUTRAL&#92;&quot;:12,&#92;&quot;NEGATIVE&#92;&quot;:19,&#92;&quot;AGREE&#92;&quot;:69,&#92;&quot;answer1&#92;&quot;:29,&#92;&quot;answer2&#92;&quot;:40,&#92;&quot;answer3&#92;&quot;:12,&#92;&quot;answer4&#92;&quot;:13,&#92;&quot;answer5&#92;&quot;:6,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:3.73,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:true}]&quot;' data-total-rows='50' data-total-columns='18' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;SURVEYR&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;QUESTION&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;SCORE100&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;ANSCOUNT&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;POSITIVE&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;NEUTRAL&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;NEGATIVE&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;AGREE&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer1&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer2&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer3&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer4&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer5&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer6&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer7&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;SCORE5&quot;,[&quot;number&quot;,&quot;f64&quot;]],[&quot;is_scored&quot;,[&quot;boolean&quot;,&quot;bool&quot;]],[&quot;is_stable&quot;,[&quot;boolean&quot;,&quot;bool&quot;]]]' data-show-filters='true' data-show-download='true' data-show-search='true' data-show-column-summaries='true' data-show-data-types='true' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-hidden-columns='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='96ec4cac-d16e-2d9d-9fe1-7111230be7fc'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;SURVEYR&#92;&quot;:2020,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q01&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:76,&#92;&quot;ANSCOUNT&#92;&quot;:188350,&#92;&quot;POSITIVE&#92;&quot;:83,&#92;&quot;NEUTRAL&#92;&quot;:4,&#92;&quot;NEGATIVE&#92;&quot;:13,&#92;&quot;AGREE&#92;&quot;:83,&#92;&quot;answer1&#92;&quot;:37,&#92;&quot;answer2&#92;&quot;:45,&#92;&quot;answer3&#92;&quot;:4,&#92;&quot;answer4&#92;&quot;:10,&#92;&quot;answer5&#92;&quot;:3,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:4.04,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:false},{&#92;&quot;SURVEYR&#92;&quot;:2022,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q01&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:78,&#92;&quot;ANSCOUNT&#92;&quot;:189360,&#92;&quot;POSITIVE&#92;&quot;:84,&#92;&quot;NEUTRAL&#92;&quot;:4,&#92;&quot;NEGATIVE&#92;&quot;:12,&#92;&quot;AGREE&#92;&quot;:84,&#92;&quot;answer1&#92;&quot;:43,&#92;&quot;answer2&#92;&quot;:41,&#92;&quot;answer3&#92;&quot;:4,&#92;&quot;answer4&#92;&quot;:9,&#92;&quot;answer5&#92;&quot;:4,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:4.1,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:false},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q01&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:74,&#92;&quot;ANSCOUNT&#92;&quot;:186345,&#92;&quot;POSITIVE&#92;&quot;:79,&#92;&quot;NEUTRAL&#92;&quot;:5,&#92;&quot;NEGATIVE&#92;&quot;:16,&#92;&quot;AGREE&#92;&quot;:79,&#92;&quot;answer1&#92;&quot;:36,&#92;&quot;answer2&#92;&quot;:43,&#92;&quot;answer3&#92;&quot;:5,&#92;&quot;answer4&#92;&quot;:11,&#92;&quot;answer5&#92;&quot;:5,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:3.94,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:false},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q02&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:88,&#92;&quot;ANSCOUNT&#92;&quot;:186420,&#92;&quot;POSITIVE&#92;&quot;:88,&#92;&quot;NEUTRAL&#92;&quot;:5,&#92;&quot;NEGATIVE&#92;&quot;:7,&#92;&quot;AGREE&#92;&quot;:88,&#92;&quot;answer1&#92;&quot;:70,&#92;&quot;answer2&#92;&quot;:16,&#92;&quot;answer3&#92;&quot;:5,&#92;&quot;answer4&#92;&quot;:4,&#92;&quot;answer5&#92;&quot;:3,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:2,&#92;&quot;SCORE5&#92;&quot;:4.5,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:false},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q03&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:85,&#92;&quot;ANSCOUNT&#92;&quot;:186270,&#92;&quot;POSITIVE&#92;&quot;:85,&#92;&quot;NEUTRAL&#92;&quot;:6,&#92;&quot;NEGATIVE&#92;&quot;:9,&#92;&quot;AGREE&#92;&quot;:85,&#92;&quot;answer1&#92;&quot;:65,&#92;&quot;answer2&#92;&quot;:17,&#92;&quot;answer3&#92;&quot;:6,&#92;&quot;answer4&#92;&quot;:6,&#92;&quot;answer5&#92;&quot;:3,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:2,&#92;&quot;SCORE5&#92;&quot;:4.39,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:false},{&#92;&quot;SURVEYR&#92;&quot;:2019,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q04&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:75,&#92;&quot;ANSCOUNT&#92;&quot;:181460,&#92;&quot;POSITIVE&#92;&quot;:78,&#92;&quot;NEUTRAL&#92;&quot;:7,&#92;&quot;NEGATIVE&#92;&quot;:15,&#92;&quot;AGREE&#92;&quot;:78,&#92;&quot;answer1&#92;&quot;:43,&#92;&quot;answer2&#92;&quot;:35,&#92;&quot;answer3&#92;&quot;:7,&#92;&quot;answer4&#92;&quot;:10,&#92;&quot;answer5&#92;&quot;:5,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:4.0,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:true},{&#92;&quot;SURVEYR&#92;&quot;:2020,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q04&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:75,&#92;&quot;ANSCOUNT&#92;&quot;:188105,&#92;&quot;POSITIVE&#92;&quot;:78,&#92;&quot;NEUTRAL&#92;&quot;:9,&#92;&quot;NEGATIVE&#92;&quot;:14,&#92;&quot;AGREE&#92;&quot;:78,&#92;&quot;answer1&#92;&quot;:39,&#92;&quot;answer2&#92;&quot;:38,&#92;&quot;answer3&#92;&quot;:9,&#92;&quot;answer4&#92;&quot;:10,&#92;&quot;answer5&#92;&quot;:3,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:4.0,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:true},{&#92;&quot;SURVEYR&#92;&quot;:2022,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q04&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:78,&#92;&quot;ANSCOUNT&#92;&quot;:189140,&#92;&quot;POSITIVE&#92;&quot;:80,&#92;&quot;NEUTRAL&#92;&quot;:7,&#92;&quot;NEGATIVE&#92;&quot;:13,&#92;&quot;AGREE&#92;&quot;:80,&#92;&quot;answer1&#92;&quot;:49,&#92;&quot;answer2&#92;&quot;:31,&#92;&quot;answer3&#92;&quot;:7,&#92;&quot;answer4&#92;&quot;:8,&#92;&quot;answer5&#92;&quot;:5,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:1,&#92;&quot;SCORE5&#92;&quot;:4.12,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:true},{&#92;&quot;SURVEYR&#92;&quot;:2024,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q04&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:66,&#92;&quot;ANSCOUNT&#92;&quot;:186145,&#92;&quot;POSITIVE&#92;&quot;:65,&#92;&quot;NEUTRAL&#92;&quot;:9,&#92;&quot;NEGATIVE&#92;&quot;:26,&#92;&quot;AGREE&#92;&quot;:65,&#92;&quot;answer1&#92;&quot;:35,&#92;&quot;answer2&#92;&quot;:30,&#92;&quot;answer3&#92;&quot;:9,&#92;&quot;answer4&#92;&quot;:14,&#92;&quot;answer5&#92;&quot;:12,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:1,&#92;&quot;SCORE5&#92;&quot;:3.62,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:true},{&#92;&quot;SURVEYR&#92;&quot;:2019,&#92;&quot;QUESTION&#92;&quot;:&#92;&quot;Q05&#92;&quot;,&#92;&quot;SCORE100&#92;&quot;:68,&#92;&quot;ANSCOUNT&#92;&quot;:181030,&#92;&quot;POSITIVE&#92;&quot;:69,&#92;&quot;NEUTRAL&#92;&quot;:12,&#92;&quot;NEGATIVE&#92;&quot;:19,&#92;&quot;AGREE&#92;&quot;:69,&#92;&quot;answer1&#92;&quot;:29,&#92;&quot;answer2&#92;&quot;:40,&#92;&quot;answer3&#92;&quot;:12,&#92;&quot;answer4&#92;&quot;:13,&#92;&quot;answer5&#92;&quot;:6,&#92;&quot;answer6&#92;&quot;:0,&#92;&quot;answer7&#92;&quot;:0,&#92;&quot;SCORE5&#92;&quot;:3.73,&#92;&quot;is_scored&#92;&quot;:true,&#92;&quot;is_stable&#92;&quot;:true}]&quot;' data-total-rows='50' data-total-columns='18' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;SURVEYR&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;QUESTION&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;SCORE100&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;ANSCOUNT&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;POSITIVE&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;NEUTRAL&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;NEGATIVE&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;AGREE&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer1&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer2&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer3&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer4&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer5&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer6&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;answer7&quot;,[&quot;integer&quot;,&quot;i32&quot;]],[&quot;SCORE5&quot;,[&quot;number&quot;,&quot;f64&quot;]],[&quot;is_scored&quot;,[&quot;boolean&quot;,&quot;bool&quot;]],[&quot;is_stable&quot;,[&quot;boolean&quot;,&quot;bool&quot;]]]' data-show-filters='true' data-show-download='true' data-show-search='true' data-show-column-summaries='true' data-show-data-types='true' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-hidden-columns='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
           }
         }
       ],
       "console": []
     },
     {
-      "id": "lEQa",
+      "id": "PKri",
+      "code_hash": "f8ca90f0be810a9273cc8cda6fa9ab29",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>Total query time</strong>: 2.89 ms</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
       "code_hash": "69862bd51b8ef281da798e0fdb1f0752",
       "outputs": [
         {
@@ -84,7 +97,7 @@
       "console": []
     },
     {
-      "id": "PKri",
+      "id": "SFPL",
       "code_hash": "18c627ce7a0f4537ce54953afdb28725",
       "outputs": [
         {
@@ -98,13 +111,13 @@
         {
           "type": "stream",
           "name": "stderr",
-          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17009/__marimo__cell_PKri_.py\"</span>, line <span class=\"m\">3</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"n\">run_pipeline</span><span class=\"p\">:</span>\n<span class=\"w\">       </span><span class=\"pm\">^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'run_pipeline' is not defined</span>\n</pre></div>\n</span>",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17238/__marimo__cell_SFPL_.py\"</span>, line <span class=\"m\">3</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"n\">run_pipeline</span><span class=\"p\">:</span>\n<span class=\"w\">       </span><span class=\"pm\">^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'run_pipeline' is not defined</span>\n</pre></div>\n</span>",
           "mimetype": "application/vnd.marimo+traceback"
         }
       ]
     },
     {
-      "id": "Xref",
+      "id": "BYtC",
       "code_hash": "ec13d4ef8738d6b8c5d9900331a8984b",
       "outputs": [
         {
@@ -117,7 +130,7 @@
       "console": []
     },
     {
-      "id": "SFPL",
+      "id": "RGSE",
       "code_hash": "c2d45489178ff672c22bb8d34600c9ce",
       "outputs": [
         {
@@ -130,7 +143,7 @@
       "console": []
     },
     {
-      "id": "BYtC",
+      "id": "Kclp",
       "code_hash": "798c7d1bbf578d9a166baf23555d6be6",
       "outputs": [
         {
@@ -144,13 +157,13 @@
         {
           "type": "stream",
           "name": "stderr",
-          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17009/__marimo__cell_BYtC_.py\"</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"n\">run_pipeline</span><span class=\"p\">:</span>\n<span class=\"w\">       </span><span class=\"pm\">^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'run_pipeline' is not defined</span>\n</pre></div>\n</span>",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17238/__marimo__cell_Kclp_.py\"</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"n\">run_pipeline</span><span class=\"p\">:</span>\n<span class=\"w\">       </span><span class=\"pm\">^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'run_pipeline' is not defined</span>\n</pre></div>\n</span>",
           "mimetype": "application/vnd.marimo+traceback"
         }
       ]
     },
     {
-      "id": "RGSE",
+      "id": "emfo",
       "code_hash": "1f9e9890f24ad40af17a551541795460",
       "outputs": [
         {
@@ -163,7 +176,7 @@
       "console": []
     },
     {
-      "id": "Kclp",
+      "id": "Hstk",
       "code_hash": "8d4c010247f40824ddd4625f0f4d5afa",
       "outputs": [
         {
@@ -176,7 +189,7 @@
       "console": []
     },
     {
-      "id": "emfo",
+      "id": "nWHF",
       "code_hash": "25ca9586619a18b5ea4f1b3f72244086",
       "outputs": [
         {
@@ -189,7 +202,7 @@
       "console": []
     },
     {
-      "id": "Hstk",
+      "id": "iLit",
       "code_hash": "8adbe6ad871ae0091821e7f5a15eaeb5",
       "outputs": [
         {
@@ -203,13 +216,13 @@
         {
           "type": "stream",
           "name": "stderr",
-          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17009/__marimo__cell_Hstk_.py\"</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"n\">run_pipeline</span><span class=\"p\">:</span>\n<span class=\"w\">       </span><span class=\"pm\">^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'run_pipeline' is not defined</span>\n</pre></div>\n</span>",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17238/__marimo__cell_iLit_.py\"</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"n\">run_pipeline</span><span class=\"p\">:</span>\n<span class=\"w\">       </span><span class=\"pm\">^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'run_pipeline' is not defined</span>\n</pre></div>\n</span>",
           "mimetype": "application/vnd.marimo+traceback"
         }
       ]
     },
     {
-      "id": "nWHF",
+      "id": "ZHCJ",
       "code_hash": "ebcd6e52965fe309f46ff31fca1a2184",
       "outputs": [
         {
@@ -222,7 +235,7 @@
       "console": []
     },
     {
-      "id": "iLit",
+      "id": "ROlb",
       "code_hash": "273233bdd4d031b4c4a5ce4daaa16b4c",
       "outputs": [
         {
@@ -236,13 +249,13 @@
         {
           "type": "stream",
           "name": "stderr",
-          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17009/__marimo__cell_iLit_.py\"</span>, line <span class=\"m\">17</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"n\">run_pipeline</span><span class=\"p\">:</span>\n<span class=\"w\">       </span><span class=\"pm\">^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'run_pipeline' is not defined</span>\n</pre></div>\n</span>",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">\"/var/folders/ld/_179940x1kjdftntw5w8d6wr0000gn/T/marimo_17238/__marimo__cell_ROlb_.py\"</span>, line <span class=\"m\">17</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"n\">run_pipeline</span><span class=\"p\">:</span>\n<span class=\"w\">       </span><span class=\"pm\">^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name 'run_pipeline' is not defined</span>\n</pre></div>\n</span>",
           "mimetype": "application/vnd.marimo+traceback"
         }
       ]
     },
     {
-      "id": "ZHCJ",
+      "id": "qnkX",
       "code_hash": "6d71892811762db3dfe29fd168b73148",
       "outputs": [
         {

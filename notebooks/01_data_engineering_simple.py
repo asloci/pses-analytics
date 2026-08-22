@@ -83,6 +83,33 @@ def _(con, mo):
 
 
 @app.cell
+def _(con, mo):
+    import time
+
+    def get_statistics():
+        start = time.time()
+        all_tables = con.execute("SHOW TABLES").fetchall()
+        stats = []
+        for (table_name,) in all_tables:
+            count_start = time.time()
+            count = con.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
+            elapsed = time.time() - count_start
+            stats.append({
+                "table": table_name,
+                "rows": count,
+                "count_time_ms": round(elapsed * 1000, 2)
+            })
+        total_elapsed = time.time() - start
+        return stats, total_elapsed
+
+    table_stats, total_elapsed = get_statistics()
+
+    # Display results
+    mo.md(f"**Total query time**: {round(total_elapsed * 1000, 2)} ms")
+    return
+
+
+@app.cell
 def _(mo):
     mo.md("""
     ### Data Ingestion
