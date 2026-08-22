@@ -83,7 +83,7 @@ def _(con, mo):
 
 
 @app.cell
-def _(con, mo):
+def _(con):
     import time
 
     def get_statistics():
@@ -109,29 +109,31 @@ def _(con, mo):
 
 
 @app.cell
-def _(table_stats, total_elapsed, mo):
-    # Generate markdown table from variables
+def _(mo, table_stats, total_elapsed):
+    total_ms = total_elapsed * 1000
+
+    # Generate markdown table with headers and separator
+    header = "| Table | Rows | Time (ms) |"
+    separator = "|------|------|----------|"
+
     md_rows = "\n".join([
         f"| {stat['table']} | {stat['rows']:,} | {stat['count_time_ms']} |"
         for stat in table_stats
     ])
-    
-    return mo.md(f"""### Database Statistics
 
-| Table | Rows | Count Time (ms) |
-|-------|------|-----------------|
-{md_rows}
+    # Combine header, separator, and rows
+    md_table = f"{header}\n{separator}\n{md_rows}"
 
-**Total query time**: {round(total_elapsed * 1000, 2)} ms
-""")
+    total_rows = sum(stat["rows"] for stat in table_stats)
+    num_tables = len(table_stats)
+    total_ms = total_elapsed * 1000
 
+    summary = (
+        f"Over **{total_rows:,}** rows counted across **{num_tables}** tables "
+        f"in less than **{total_ms:.1f} ms**."
+    )
 
-
-@app.cell
-def _(mo):
-    mo.md("""
-    ### Data Ingestion
-    """)
+    mo.md(f"{summary}\n\n**Query statistics**\n\n{md_table}\n\n")
     return
 
 
