@@ -292,7 +292,42 @@ def _(mo):
     mo.md("""
     ## Explanation
 
-    The pipeline creates all tables needed for analysis. If the database already existed, you can view sample data above and download it. If you generated a new database, all tables have been created and are ready for analysis.
+    Python and SQL are used to ingest and transform the survey data into an analytical database.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Ingestion: Raw Data
+
+    Loads the main PSES dataset from CSV into DuckDB.
+
+    ```sql
+    DROP TABLE IF EXISTS raw_pses
+    CREATE TABLE raw_pses AS SELECT * FROM read_csv_auto('https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv', header=true, ignore_errors=true)
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Ingestion: Theme Taxonomy
+
+    Loads the theme/indicator taxonomy from Subset 1 CSV.
+
+    ```sql
+    CREATE OR REPLACE TABLE theme_map AS
+    SELECT DISTINCT ON (QUESTION) QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
+    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY QUESTION
+
+    CREATE OR REPLACE TABLE indicator_map AS
+    SELECT DISTINCT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
+    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY INDICATORID, SUBINDICATORID
+    ```
     """)
     return
 
