@@ -18,7 +18,7 @@ def _(mo):
 
     ## Summary
 
-    This notebook ingested and built an analytical dataset to display Public Service Employee Survey (PSES) results for longitudinal analysis across themes and sub-themes.
+    This notebook ingested and built an analytical database to display Public Service Employee Survey (PSES) results for longitudinal analysis across themes and sub-themes.
 
     It performed the following steps:
 
@@ -29,13 +29,7 @@ def _(mo):
 
     **Output**:
 
-    All tables were written to `data/pses.duckdb`. If you do not see sample data in [Results](#results), you can generate the database using this notebook.
-
-    **Reproducibility**:
-
-    Any user can run this notebook using the following steps:
-
-    - ***insert instructions on uv and code execution***
+    All tables were written to `data/pses.duckdb`. If you do not see sample data in [Results](#results), you can generate the database using the button below.
 
     **Data Source**:
 
@@ -49,10 +43,17 @@ def _(mo):
 
 @app.cell
 def _(mo):
+    rundb_button = mo.ui.run_button(label="Generate the PSES Analytical Database (DuckDB format)")
+    rundb_button
+    return
+
+
+@app.cell
+def _(mo):
     mo.Html(
         """
         <div style="background-color: rgba(255, 204, 0, 0.2); padding: 20px; border-left: 4px solid #ffcc00; border-radius: 4px;">
-            &#9888;&#65039; <strong>Attention:</strong> The section below does not describe or analyze the survey results. It shows the analytical dataset that is created by this notebook.
+            &#9888;&#65039; <strong>Attention:</strong> The section below does not describe or analyze the survey results. It shows a sample and statistics of the generated analytical database.
         </div>
         """
     )
@@ -64,7 +65,7 @@ def _(mo):
     mo.md("""
     ## Results
 
-    Once the database has been built, you can view a sample from the whole-of-government analytical table as follows:
+    The below SQL statement is used to view fifty row sample of the whole-of-government table from the database:
     ```sql
     SELECT * FROM pses_wog LIMIT 50
     ```

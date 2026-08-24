@@ -20,25 +20,25 @@
     },
     {
       "id": "MJUe",
-      "code_hash": "8de025979e3ac3f1a84b49a1d4d9df75",
+      "code_hash": "8f73fbac67b692b6cb96509ecef34002",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"data-engineering-notebook-for-the-government-of-canada-public-service-employee-survey-pses\">Data Engineering \ud83c\udf0a\ud83c\udf43 Notebook for the Government of Canada Public Service Employee Survey (PSES)</h1>\n<h2 id=\"summary\">Summary</h2>\n<span class=\"paragraph\">This notebook ingested and built an analytical dataset to display Public Service Employee Survey (PSES) results for longitudinal analysis across themes and sub-themes.</span>\n<span class=\"paragraph\">It performed the following steps:</span>\n<ol>\n<li><strong>Ingestion</strong>: Downloaded the raw PSES CSV and converted it into <a href=\"https://duckdb.org/\" rel=\"noopener noreferrer\" target=\"_blank\">DuckDB</a> format</li>\n<li><strong>Theme Mapping</strong>: Loaded the theme/indicator taxonomy from Subset 1 CSV<sup id=\"fnref:8-1\"><a class=\"footnote-ref\" href=\"#fn:8-1\">1</a></sup></li>\n<li><strong>Transformation</strong>: Created whole-of-government analytical tables</li>\n<li><strong>Statistical Analysis</strong>: Computed theme scores, year-over-year changes</li>\n</ol>\n<span class=\"paragraph\"><strong>Output</strong>:</span>\n<span class=\"paragraph\">All tables were written to <code>data/pses.duckdb</code>. If you do not see sample data in <a href=\"#results\">Results</a>, you can generate the database using this notebook.</span>\n<span class=\"paragraph\"><strong>Reproducibility</strong>:</span>\n<span class=\"paragraph\">Any user can run this notebook using the following steps:</span>\n<ul>\n<li><strong><em>insert instructions on uv and code execution</em></strong></li>\n</ul>\n<span class=\"paragraph\"><strong>Data Source</strong>:</span>\n<ul>\n<li>Main dataset: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv</a></li>\n<li>Theme taxonomy: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv</a></li>\n</ul>\n<div class=\"footnote\">\n<hr />\n<ol>\n<li id=\"fn:8-1\">This file contains characters out of range for the UTF-8 encoding. <a href=\"#annex\">Annex</a> contains the helper function that deals with the BOM-prefixed, Latin-1 encoded file in question.&#160;<a class=\"footnote-backref\" href=\"#fnref:8-1\" title=\"Jump back to footnote 1 in the text\">&#8617;</a></li>\n</ol>\n</div></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"data-engineering-notebook-for-the-government-of-canada-public-service-employee-survey-pses\">Data Engineering \ud83c\udf0a\ud83c\udf43 Notebook for the Government of Canada Public Service Employee Survey (PSES)</h1>\n<h2 id=\"summary\">Summary</h2>\n<span class=\"paragraph\">This notebook ingested and built an analytical database to display Public Service Employee Survey (PSES) results for longitudinal analysis across themes and sub-themes.</span>\n<span class=\"paragraph\">It performed the following steps:</span>\n<ol>\n<li><strong>Ingestion</strong>: Downloaded the raw PSES CSV and converted it into <a href=\"https://duckdb.org/\" rel=\"noopener noreferrer\" target=\"_blank\">DuckDB</a> format</li>\n<li><strong>Theme Mapping</strong>: Loaded the theme/indicator taxonomy from Subset 1 CSV<sup id=\"fnref:160-1\"><a class=\"footnote-ref\" href=\"#fn:160-1\">1</a></sup></li>\n<li><strong>Transformation</strong>: Created whole-of-government analytical tables</li>\n<li><strong>Statistical Analysis</strong>: Computed theme scores, year-over-year changes</li>\n</ol>\n<span class=\"paragraph\"><strong>Output</strong>:</span>\n<span class=\"paragraph\">All tables were written to <code>data/pses.duckdb</code>. If you do not see sample data in <a href=\"#results\">Results</a>, you can generate the database using the button below.</span>\n<span class=\"paragraph\"><strong>Data Source</strong>:</span>\n<ul>\n<li>Main dataset: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv</a></li>\n<li>Theme taxonomy: <a href=\"https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv\" rel=\"noopener noreferrer\" target=\"_blank\">https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv</a></li>\n</ul>\n<div class=\"footnote\">\n<hr />\n<ol>\n<li id=\"fn:160-1\">This file contains characters out of range for the UTF-8 encoding. <a href=\"#annex\">Annex</a> contains the helper function that deals with the BOM-prefixed, Latin-1 encoded file in question.&#160;<a class=\"footnote-backref\" href=\"#fnref:160-1\" title=\"Jump back to footnote 1 in the text\">&#8617;</a></li>\n</ol>\n</div></span>"
           }
         }
       ],
       "console": []
     },
     {
-      "id": "cjPu",
-      "code_hash": "5308b72fd647e6939a4f71071d6113fb",
+      "id": "JZcv",
+      "code_hash": "f9d67467ddeffa4d3df4fa74747bbfaf",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/html": "\n    <div style=\"background-color: rgba(255, 204, 0, 0.2); padding: 20px; border-left: 4px solid #ffcc00; border-radius: 4px;\">\n        &#9888;&#65039; <strong>Attention:</strong> The section below does not describe or analyze the survey results. It shows the analytical dataset that is created by this notebook.\n    </div>\n    "
+            "text/html": "<marimo-ui-element object-id='JZcv-0' random-id='0c8cb1ed-c084-8430-9f62-f9f5959bf27c'><marimo-button data-initial-value='0' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eGenerate the PSES Analytical Database (DuckDB format)&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-kind='&quot;neutral&quot;' data-disabled='false' data-full-width='false'></marimo-button></marimo-ui-element>"
           }
         }
       ],
@@ -46,12 +46,12 @@
     },
     {
       "id": "vblA",
-      "code_hash": "8f383f5e6ed64b48bab05501d01f6390",
+      "code_hash": "f3d4177307c214fd404e54d0e127aedb",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"results\">Results</h2>\n<span class=\"paragraph\">Once the database has been built, you can view a sample from the whole-of-government analytical table as follows:\n<div class=\"language-sql codehilite\"><pre><span></span><code><span class=\"k\">SELECT</span><span class=\"w\"> </span><span class=\"o\">*</span><span class=\"w\"> </span><span class=\"k\">FROM</span><span class=\"w\"> </span><span class=\"n\">pses_wog</span><span class=\"w\"> </span><span class=\"k\">LIMIT</span><span class=\"w\"> </span><span class=\"mi\">50</span>\n</code></pre></div></span></span>"
+            "text/html": "\n    <div style=\"background-color: rgba(255, 204, 0, 0.2); padding: 20px; border-left: 4px solid #ffcc00; border-radius: 4px;\">\n        &#9888;&#65039; <strong>Attention:</strong> The section below does not describe or analyze the survey results. It shows a sample and statistics of the generated analytical database.\n    </div>\n    "
           }
         }
       ],
@@ -59,6 +59,19 @@
     },
     {
       "id": "bkHC",
+      "code_hash": "6d1b9d3d79a28068bf5dd71d85ecf9fc",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"results\">Results</h2>\n<span class=\"paragraph\">The below SQL statement is used to view fifty row sample of the whole-of-government table from the database:\n<div class=\"language-sql codehilite\"><pre><span></span><code><span class=\"k\">SELECT</span><span class=\"w\"> </span><span class=\"o\">*</span><span class=\"w\"> </span><span class=\"k\">FROM</span><span class=\"w\"> </span><span class=\"n\">pses_wog</span><span class=\"w\"> </span><span class=\"k\">LIMIT</span><span class=\"w\"> </span><span class=\"mi\">50</span>\n</code></pre></div></span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
       "code_hash": "46223280fc83d97d22cab9afdc7ff12f",
       "outputs": [
         {
@@ -71,7 +84,7 @@
       "console": []
     },
     {
-      "id": "lEQa",
+      "id": "PKri",
       "code_hash": "09b45a0bba97f4a89865780781ae3bef",
       "outputs": [
         {
@@ -84,7 +97,7 @@
       "console": []
     },
     {
-      "id": "PKri",
+      "id": "Xref",
       "code_hash": "e495a10467795ec30ad58c1e5060b233",
       "outputs": [
         {
@@ -97,7 +110,7 @@
       "console": []
     },
     {
-      "id": "Xref",
+      "id": "SFPL",
       "code_hash": "3a603d581e372c96a4fa25fff5216f80",
       "outputs": [
         {
