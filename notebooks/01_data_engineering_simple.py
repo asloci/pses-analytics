@@ -407,6 +407,20 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Transformation: Analytical Table
+
+    ```sql
+    CREATE OR REPLACE TABLE pses_analysis AS
+    SELECT w.*, t.TITLE_E, t.INDICATORID, t.INDICATORENG, t.SUBINDICATORID, t.SUBINDICATORENG
+    FROM pses_wog w INNER JOIN theme_map t ON w.QUESTION = t.QUESTION
+    ```
+    """)
+    return
+
+
 @app.cell
 def _(db_path, mo, run_pipeline):
     import duckdb as _dd
