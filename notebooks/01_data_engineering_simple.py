@@ -61,38 +61,14 @@ def _(mo):
 
 
 @app.cell
-def _(mo):
-    mo.md("""
-    ## Results
-
-    The below SQL statement is used to view fifty row sample of the whole-of-government table from the database:
-    ```sql
-    SELECT * FROM pses_wog LIMIT 50
-    ```
-    """)
-    return
-
-
-@app.cell
 def _():
     import duckdb
     import os
     from pathlib import Path
 
-    db_path = str(Path("data") / "pses.duckdb")
+    db_path = str(Path("../data") / "pses.duckdb")
     con = duckdb.connect(db_path)
     return con, db_path, duckdb
-
-
-@app.cell(hide_code=True)
-def _(con, mo):
-    _df = mo.sql(
-        f"""
-        SELECT * FROM pses_wog LIMIT 50
-        """,
-        engine=con
-    )
-    return
 
 
 @app.cell
@@ -108,9 +84,9 @@ def _(con):
             count = con.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
             elapsed = time.time() - count_start
             stats.append({
-                "table": table_name,
-                "rows": count,
-                "count_time_ms": round(elapsed * 1000, 2)
+                "Table_name": table_name,
+                "Number_of_rows": count,
+                "Time_elapsed_in_ms": round(elapsed * 1000, 2)
             })
         total_elapsed = time.time() - start
         return stats, total_elapsed
@@ -122,22 +98,10 @@ def _(con):
 
 
 @app.cell
-def _(mo, table_stats, total_elapsed):
+def _(table_stats, total_elapsed):
     total_ms = total_elapsed * 1000
 
-    # Generate markdown table with headers and separator
-    header = "| Table | Rows | Time (ms) |"
-    separator = "|------|------|----------|"
-
-    md_rows = "\n".join([
-        f"| {stat['table']} | {stat['rows']:,} | {stat['count_time_ms']} |"
-        for stat in table_stats
-    ])
-
-    # Combine header, separator, and rows
-    md_table = f"{header}\n{separator}\n{md_rows}"
-
-    total_rows = sum(stat["rows"] for stat in table_stats)
+    total_rows = sum(stat["Number_of_rows"] for stat in table_stats)
     num_tables = len(table_stats)
     total_ms = total_elapsed * 1000
 
@@ -146,7 +110,44 @@ def _(mo, table_stats, total_elapsed):
         f"in less than **{total_ms:.1f} ms**."
     )
 
-    mo.md(f"{summary}\n\n**Query statistics**\n\n{md_table}\n\n")
+    # Sort by rows descending for marimo table
+    sorted_stats = sorted(table_stats, key=lambda x: x["Number_of_rows"], reverse=True)
+    return sorted_stats, summary
+
+
+@app.cell(hide_code=True)
+def _(mo, summary):
+    mo.md(f"""
+    ##Results\n\n{summary}
+    """)
+    return
+
+
+@app.cell
+def _(mo, sorted_stats):
+    mo.ui.table(data=sorted_stats, label='Query Statistics:')
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    Whole-of-government table sample from the database retrieved using the following SQL statement:
+    ```sql
+    SELECT * FROM pses_wog LIMIT 50
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(con, mo):
+    _df = mo.sql(
+        f"""
+        SELECT * FROM pses_wog LIMIT 50
+        """,
+        engine=con
+    )
     return
 
 
