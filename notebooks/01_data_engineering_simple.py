@@ -43,13 +43,6 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    rundb_button = mo.ui.run_button(label="Generate the PSES Analytical Database (DuckDB format)")
-    rundb_button
-    return
-
-
-@app.cell
-def _(mo):
     mo.Html(
         """
         <div style="background-color: rgba(255, 204, 0, 0.2); padding: 20px; border-left: 4px solid #ffcc00; border-radius: 4px;">
@@ -61,6 +54,13 @@ def _(mo):
 
 
 @app.cell
+def _(mo):
+    rundb_button = mo.ui.run_button(label="Generate the PSES Analytical Database (DuckDB format)")
+    rundb_button
+    return rundb_button
+
+
+@app.cell
 def _():
     import duckdb
     import os
@@ -69,64 +69,6 @@ def _():
     db_path = str(Path("../data") / "pses.duckdb")
     con = duckdb.connect(db_path)
     return con, db_path, duckdb
-
-
-@app.cell
-def _(con):
-    import time
-
-    def get_statistics():
-        start = time.time()
-        all_tables = con.execute("SHOW TABLES").fetchall()
-        stats = []
-        for (table_name,) in all_tables:
-            count_start = time.time()
-            count = con.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
-            elapsed = time.time() - count_start
-            stats.append({
-                "Table_name": table_name,
-                "Number_of_rows": count,
-                "Time_elapsed_in_ms": round(elapsed * 1000, 2)
-            })
-        total_elapsed = time.time() - start
-        return stats, total_elapsed
-
-    table_stats, total_elapsed = get_statistics()
-
-    # Return variables for downstream use
-    return table_stats, total_elapsed
-
-
-@app.cell
-def _(table_stats, total_elapsed):
-    total_ms = total_elapsed * 1000
-
-    total_rows = sum(stat["Number_of_rows"] for stat in table_stats)
-    num_tables = len(table_stats)
-    total_ms = total_elapsed * 1000
-
-    summary = (
-        f"Over **{total_rows:,}** rows counted across **{num_tables}** tables "
-        f"in less than **{total_ms:.1f} ms**."
-    )
-
-    # Sort by rows descending for marimo table
-    sorted_stats = sorted(table_stats, key=lambda x: x["Number_of_rows"], reverse=True)
-    return sorted_stats, summary
-
-
-@app.cell(hide_code=True)
-def _(mo, summary):
-    mo.md(f"""
-    ##Results\n\n{summary}
-    """)
-    return
-
-
-@app.cell
-def _(mo, sorted_stats):
-    mo.ui.table(data=sorted_stats, label='Query Statistics:')
-    return
 
 
 @app.cell
@@ -152,10 +94,10 @@ def _(con, mo):
 
 
 @app.cell
-def _(db_path, duckdb, run_pipeline):
+def _(db_path, duckdb, rundb_button):
     CSV_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv"
     RAW_TABLE = "raw_pses"
-    if run_pipeline:
+    if rundb_button:
         pipe_con_1 = duckdb.connect(db_path)
         pipe_con_1.execute(f"DROP TABLE IF EXISTS {RAW_TABLE}")
         pipe_con_1.execute(f"CREATE TABLE {RAW_TABLE} AS SELECT * FROM read_csv_auto('{CSV_URL}', header=true, ignore_errors=true)")
@@ -199,8 +141,8 @@ def _():
 
 
 @app.cell
-def _(fetch_with_bom_strip, mo, run_pipeline):
-    if run_pipeline:
+def _(fetch_with_bom_strip, mo, rundb_button):
+    if rundb_button:
         SUBSET1_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv"
         csv_path_1 = fetch_with_bom_strip(SUBSET1_URL)
         mo.md(f"**Fetched theme CSV**: {SUBSET1_URL}")
@@ -230,9 +172,9 @@ def _(
     make_double_expr,
     make_int_expr,
     mo,
-    run_pipeline,
+    rundb_button,
 ):
-    if run_pipeline:
+    if rundb_button:
         pipe_con_2 = duckdb.connect(db_path)
         int_exprs = ", ".join(make_int_expr(c) for c in INT_COLS)
         score5_expr = make_double_expr("SCORE5")
@@ -252,8 +194,8 @@ def _(
 
 
 @app.cell
-def _(csv_path_1, db_path, duckdb, mo, run_pipeline):
-    if run_pipeline and csv_path_1:
+def _(csv_path_1, db_path, duckdb, mo, rundb_button):
+    if rundb_button and csv_path_1:
         pipe_con_3 = duckdb.connect(db_path)
         pipe_con_3.execute("""
             CREATE OR REPLACE TABLE theme_map AS
@@ -274,8 +216,8 @@ def _(csv_path_1, db_path, duckdb, mo, run_pipeline):
 
 
 @app.cell
-def _(db_path, duckdb, mo, run_pipeline):
-    if run_pipeline:
+def _(db_path, duckdb, mo, rundb_button):
+    if rundb_button:
         pipe_con_4 = duckdb.connect(db_path)
         pipe_con_4.execute("""
             CREATE OR REPLACE TABLE pses_analysis AS
@@ -287,8 +229,6 @@ def _(db_path, duckdb, mo, run_pipeline):
     return
 
 
-@app.cell(hide_code=True)
-def _(app):
     @app.cell
     def _():
         # Subquery: questions where SCORE100 is non-null in all 4 survey years
@@ -305,11 +245,9 @@ def _(app):
     return
 
 
-@app.cell(hide_code=True)
-def _(app):
     @app.cell
-    def _(INT_COLS, make_int_expr, make_double_expr, con, mo, run_pipeline):
-        if run_pipeline:
+    def _(INT_COLS, make_int_expr, make_double_expr, con, mo, rundb_button):
+        if rundb_button:
             int_exprs = ", ".join(make_int_expr(c) for c in INT_COLS)
             score5_expr_sliced = make_double_expr("SCORE5")
 
@@ -342,11 +280,9 @@ def _(app):
     return
 
 
-@app.cell(hide_code=True)
-def _(app):
     @app.cell
-    def _(FSQ, con, mo, run_pipeline):
-        if run_pipeline:
+    def _(FSQ, con, mo, rundb_button):
+        if rundb_button:
             con.execute(f"""
                 CREATE OR REPLACE TABLE theme_scores AS
                 SELECT
@@ -386,11 +322,9 @@ def _(app):
     return
 
 
-@app.cell(hide_code=True)
-def _(app):
     @app.cell
-    def _(con, mo, run_pipeline):
-        if run_pipeline:
+    def _(con, mo, rundb_button):
+        if rundb_button:
             con.execute("""
                 CREATE OR REPLACE TABLE yoy_changes AS
                 SELECT
@@ -429,11 +363,9 @@ def _(app):
     return
 
 
-@app.cell(hide_code=True)
-def _(app):
     @app.cell
-    def _(FSQ, con, mo, run_pipeline):
-        if run_pipeline:
+    def _(FSQ, con, mo, rundb_button):
+        if rundb_button:
             import itertools
             from collections import defaultdict
             from scipy.stats import pearsonr
@@ -506,11 +438,9 @@ def _(app):
     return
 
 
-@app.cell(hide_code=True)
-def _(app):
     @app.cell
-    def _(FSQ, con, mo, run_pipeline):
-        if run_pipeline:
+    def _(FSQ, con, mo, rundb_button):
+        if rundb_button:
             from scipy.stats import chi2_contingency
 
             rows = con.execute(f"""
@@ -607,6 +537,374 @@ def _(app):
         return
 
 
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Ingestion: Theme Taxonomy
+
+    Loads the theme/indicator taxonomy from Subset 1 CSV.
+
+    ```sql
+    CREATE OR REPLACE TABLE theme_map AS
+    SELECT DISTINCT ON (QUESTION) QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
+    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY QUESTION
+
+    CREATE OR REPLACE TABLE indicator_map AS
+    SELECT DISTINCT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
+    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY INDICATORID, SUBINDICATORID
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Transformation: Whole-of-Government Spine (Legacyu)
+
+    A combination of Python and SQL is used for this transformation step. A list is created in Python and two helper functions that do the `NULLIF CAST` to a `cols` variable for `9999` and `9999.0`. These are applied to build and execute the SQL that creates the `pses_wog` table.
+
+    ```sql
+    CREATE OR REPLACE TABLE pses_wog AS
+    WITH base AS (SELECT CAST(SURVEYR AS INTEGER) AS SURVEYR, QUESTION, NULLIF(CAST(SCORE100 AS INTEGER), 9999) AS SCORE100, NULLIF(CAST(ANSCOUNT AS INTEGER), 9999) AS ANSCOUNT, NULLIF(CAST(POSITIVE AS INTEGER), 9999) AS POSITIVE, NULLIF(CAST(NEUTRAL AS INTEGER), 9999) AS NEUTRAL, NULLIF(CAST(NEGATIVE AS INTEGER), 9999) AS NEGATIVE, NULLIF(CAST(AGREE AS INTEGER), 9999) AS AGREE, NULLIF(CAST(answer1 AS INTEGER), 9999) AS answer1, NULLIF(CAST(answer2 AS INTEGER), 9999) AS answer2, NULLIF(CAST(answer3 AS INTEGER), 9999) AS answer3, NULLIF(CAST(answer4 AS INTEGER), 9999) AS answer4, NULLIF(CAST(answer5 AS INTEGER), 9999) AS answer5, NULLIF(CAST(answer6 AS INTEGER), 9999) AS answer6, NULLIF(CAST(answer7 AS INTEGER), 9999) AS answer7, NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5 FROM raw_pses WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL),
+    stable_questions AS (SELECT QUESTION FROM raw_pses WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL GROUP BY QUESTION HAVING COUNT(DISTINCT SURVEYR) = (SELECT COUNT(DISTINCT SURVEYR) FROM raw_pses))
+    SELECT b.SURVEYR, b.QUESTION, NULLIF(CAST(SCORE100 AS INTEGER), 9999) AS SCORE100, NULLIF(CAST(ANSCOUNT AS INTEGER), 9999) AS ANSCOUNT, NULLIF(CAST(POSITIVE AS INTEGER), 9999) AS POSITIVE, NULLIF(CAST(NEUTRAL AS INTEGER), 9999) AS NEUTRAL, NULLIF(CAST(NEGATIVE AS INTEGER), 9999) AS NEGATIVE, NULLIF(CAST(AGREE AS INTEGER), 9999) AS AGREE, NULLIF(CAST(answer1 AS INTEGER), 9999) AS answer1, NULLIF(CAST(answer2 AS INTEGER), 9999) AS answer2, NULLIF(CAST(answer3 AS INTEGER), 9999) AS answer3, NULLIF(CAST(answer4 AS INTEGER), 9999) AS answer4, NULLIF(CAST(answer5 AS INTEGER), 9999) AS answer5, NULLIF(CAST(answer6 AS INTEGER), 9999) AS answer6, NULLIF(CAST(answer7 AS INTEGER), 9999) AS answer7, NULLIF(CAST(b.SCORE100 AS INTEGER), 9999) IS NOT NULL AS is_scored, (b.QUESTION IN (SELECT QUESTION FROM stable_questions)) AS is_stable FROM base b
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Transformation: Theme Lookup Table
+
+    ```sql
+    CREATE OR REPLACE TABLE theme_map AS
+    SELECT DISTINCT ON (QUESTION) QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
+    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY QUESTION
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Transformation: Analytical Table
+
+    ```sql
+    CREATE OR REPLACE TABLE pses_analysis AS
+    SELECT w.*, t.TITLE_E, t.INDICATORID, t.INDICATORENG, t.SUBINDICATORID, t.SUBINDICATORENG
+    FROM pses_wog w INNER JOIN theme_map t ON w.QUESTION = t.QUESTION
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Transformation: Demographic/Org Slices
+
+    Creates a table with demographic and organizational breakdowns (BYCOND IS NOT NULL).
+
+    ```sql
+    CREATE OR REPLACE TABLE pses_sliced AS
+    SELECT
+        CAST(SURVEYR AS INTEGER) AS SURVEYR,
+        QUESTION,
+        BYCOND,
+        DEMCODE,
+        NULLIF(CAST(SCORE100 AS INTEGER), 9999) AS SCORE100,
+        NULLIF(CAST(ANSCOUNT AS INTEGER), 9999) AS ANSCOUNT,
+        NULLIF(CAST(POSITIVE AS INTEGER), 9999) AS POSITIVE,
+        NULLIF(CAST(NEUTRAL AS INTEGER), 9999) AS NEUTRAL,
+        NULLIF(CAST(NEGATIVE AS INTEGER), 9999) AS NEGATIVE,
+        NULLIF(CAST(AGREE AS INTEGER), 9999) AS AGREE,
+        NULLIF(CAST(answer1 AS INTEGER), 9999) AS answer1,
+        NULLIF(CAST(answer2 AS INTEGER), 9999) AS answer2,
+        NULLIF(CAST(answer3 AS INTEGER), 9999) AS answer3,
+        NULLIF(CAST(answer4 AS INTEGER), 9999) AS answer4,
+        NULLIF(CAST(answer5 AS INTEGER), 9999) AS answer5,
+        NULLIF(CAST(answer6 AS INTEGER), 9999) AS answer6,
+        NULLIF(CAST(answer7 AS INTEGER), 9999) AS answer7,
+        NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5
+    FROM raw_pses
+    WHERE BYCOND IS NOT NULL
+      AND LEVEL1ID = 0
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Statistical Analysis: Theme Scores
+
+    Computes mean SCORE100 per subtheme per year for longitudinal analysis.
+
+    ```sql
+    CREATE OR REPLACE TABLE theme_scores AS
+    SELECT
+        SURVEYR,
+        INDICATORID,
+        INDICATORENG,
+        SUBINDICATORID,
+        SUBINDICATORENG,
+        AVG(SCORE100) AS mean_score
+    FROM pses_analysis
+    WHERE QUESTION IN (
+        SELECT QUESTION
+        FROM pses_analysis
+        WHERE is_stable = true
+        GROUP BY QUESTION
+        HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
+    )
+      AND QUESTION NOT LIKE 'Q73%'
+    GROUP BY
+        SURVEYR,
+        INDICATORID,
+        INDICATORENG,
+        SUBINDICATORID,
+        SUBINDICATORENG
+    ORDER BY
+        INDICATORID,
+        SUBINDICATORID,
+        SURVEYR
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Statistical Analysis: Year-over-Year Changes
+
+    Computes year-over-year deltas in mean_score per subtheme.
+
+    ```sql
+    CREATE OR REPLACE TABLE yoy_changes AS
+    SELECT
+        a.SUBINDICATORENG,
+        a.INDICATORENG,
+        a.SURVEYR AS year_from,
+        b.SURVEYR AS year_to,
+        a.mean_score AS score_from,
+        b.mean_score AS score_to,
+        b.mean_score - a.mean_score AS delta
+    FROM theme_scores a
+    JOIN theme_scores b
+      ON a.SUBINDICATORID = b.SUBINDICATORID
+      AND (
+            (a.SURVEYR = 2019 AND b.SURVEYR = 2020)
+         OR (a.SURVEYR = 2020 AND b.SURVEYR = 2022)
+         OR (a.SURVEYR = 2022 AND b.SURVEYR = 2024)
+          )
+    ORDER BY
+        a.SUBINDICATORENG,
+        a.SURVEYR
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Statistical Analysis: Question Correlations
+
+    **FLAG: Mixed Python/SQL** - This table uses Python (scipy.stats.pearsonr) to compute Pearson correlation coefficients between question pairs, then stores results in a SQL table.
+
+    The SQL extracts data from pses_analysis:
+    ```sql
+    SELECT SURVEYR, QUESTION, SCORE100
+    FROM pses_analysis
+    WHERE QUESTION IN (
+        SELECT QUESTION
+        FROM pses_analysis
+        WHERE is_stable = true
+        GROUP BY QUESTION
+        HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
+    )
+      AND QUESTION NOT LIKE 'Q73%'
+    ORDER BY QUESTION, SURVEYR
+    ```
+
+    Python then:
+    1. Builds a pivot table of scores by question and year
+    2. Computes Pearson r for all question pairs using scipy.stats.pearsonr
+    3. Creates the table with schema: (question_a, question_b, pearson_r, p_value)
+
+    Final table:
+    ```sql
+    CREATE OR REPLACE TABLE question_correlations (
+        question_a  VARCHAR,
+        question_b  VARCHAR,
+        pearson_r   DOUBLE,
+        p_value     DOUBLE
+    )
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Statistical Analysis: Chi-Square Results
+
+    **FLAG: Mixed Python/SQL** - This table uses Python (scipy.stats.chi2_contingency) to perform chi-square tests, then stores results in a SQL table.
+
+    The SQL extracts answer distribution data:
+    ```sql
+    SELECT QUESTION, SURVEYR,
+           answer1, answer2, answer3, answer4, answer5,
+           ANSCOUNT
+    FROM pses_analysis
+    WHERE QUESTION IN (
+        SELECT QUESTION
+        FROM pses_analysis
+        WHERE is_stable = true
+        GROUP BY QUESTION
+        HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
+    )
+      AND QUESTION NOT LIKE 'Q73%'
+      AND SURVEYR IN (2019, 2024)
+    ORDER BY QUESTION, SURVEYR
+    ```
+
+    Python then:
+    1. Fetches indicator labels (INDICATORENG, SUBINDICATORENG)
+    2. Reconstructs raw counts from percentages x ANSCOUNT
+    3. Performs chi-square test between 2019 and 2024 distributions
+    4. Creates the table with schema: (QUESTION, INDICATORENG, SUBINDICATORENG, chi2, p_value, dof, significant)
+
+    Final table:
+    ```sql
+    CREATE OR REPLACE TABLE chi_square_results (
+        QUESTION        VARCHAR,
+        INDICATORENG    VARCHAR,
+        SUBINDICATORENG VARCHAR,
+        chi2            DOUBLE,
+        p_value         DOUBLE,
+        dof             INTEGER,
+        significant     BOOLEAN
+    )
+    ```
+    """)
+    return
+
+
+@app.cell
+def _(db_path, mo, rundb_button):
+    import duckdb as _dd
+    summary_con = _dd.connect(db_path)
+    tables = ["raw_pses", "theme_map", "indicator_map", "pses_wog", "pses_analysis"]
+    mo.md("**Table Summary:**")
+    mo.md("| Table | Rows | Description |")
+    mo.md("|-------|------|-------------|")
+    for t in tables:
+        try:
+            c = summary_con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+            d = {"raw_pses": "Full ingested dataset", "theme_map": "Question-theme lookup", 
+                 "indicator_map": "Theme reference", "pses_wog": "WOG spine", 
+                 "pses_analysis": "Primary analytical table"}
+            mo.md(f"| `{t}` | {c:,} | {d.get(t, t)} |")
+        except Exception:
+            mo.md(f"| `{t}` | N/A | Not yet created |")
+    summary_con.close()
+    if rundb_button:
+        mo.md("\n**Pipeline complete!** All tables created successfully.")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Annex
+
+    The BOM-prefix stripper helper function is used to deal with Excel-like artefacts.
+
+    ```
+    import tempfile
+    import httpx
+    def fetch_with_bom_strip(url: str) -> str:
+        response = httpx.get(url, timeout=60, follow_redirects=True)
+        response.raise_for_status()
+        content = response.content
+        if content.startswith(b'\xef\xbb\xbf'):
+            content = content[3:]
+        text = content.decode('latin-1')
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.csv', mode='w', encoding='utf-8')
+        tmp.write(text)
+        tmp.close()
+        return tmp.name
+    ```
+    """)
+    return
+
+
+@app.cell
+def _(con):
+    import time
+
+    def get_statistics():
+        start = time.time()
+        all_tables = con.execute("SHOW TABLES").fetchall()
+        stats = []
+        for (table_name,) in all_tables:
+            count_start = time.time()
+            count = con.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
+            elapsed = time.time() - count_start
+            stats.append({
+                "Table_name": table_name,
+                "Number_of_rows": count,
+                "Time_elapsed_in_ms": round(elapsed * 1000, 2)
+            })
+        total_elapsed = time.time() - start
+        return stats, total_elapsed
+
+    table_stats, total_elapsed = get_statistics()
+
+    # Return variables for downstream use
+    return table_stats, total_elapsed
+
+
+@app.cell
+def _(table_stats, total_elapsed):
+    total_ms = total_elapsed * 1000
+
+    total_rows = sum(stat["Number_of_rows"] for stat in table_stats)
+    num_tables = len(table_stats)
+    total_ms = total_elapsed * 1000
+
+    summary = (
+        f"Over **{total_rows:,}** rows counted across **{num_tables}** tables "
+        f"in less than **{total_ms:.1f} ms**."
+    )
+
+    # Sort by rows descending for marimo table
+    sorted_stats = sorted(table_stats, key=lambda x: x["Number_of_rows"], reverse=True)
+    return sorted_stats, summary
+
+
+@app.cell(hide_code=True)
+def _(mo, summary):
+    mo.md(f"""
+    ##Results\n\n{summary}
+    """)
+    return
+
+
+@app.cell
+def _(mo, sorted_stats):
+    mo.ui.table(data=sorted_stats, label='Query Statistics:')
     return
 
 
@@ -941,7 +1239,7 @@ def _(mo):
 
 
 @app.cell
-def _(db_path, mo, run_pipeline):
+def _(db_path, mo, rundb_button):
     import duckdb as _dd
     summary_con = _dd.connect(db_path)
     tables = ["raw_pses", "theme_map", "indicator_map", "pses_wog", "pses_analysis"]
@@ -958,7 +1256,7 @@ def _(db_path, mo, run_pipeline):
         except Exception:
             mo.md(f"| `{t}` | N/A | Not yet created |")
     summary_con.close()
-    if run_pipeline:
+    if rundb_button:
         mo.md("\n**Pipeline complete!** All tables created successfully.")
     return
 
