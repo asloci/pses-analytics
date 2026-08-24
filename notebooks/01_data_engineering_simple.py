@@ -379,6 +379,34 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Transformation: Theme Lookup Table
+
+    ```sql
+    CREATE OR REPLACE TABLE theme_map AS
+    SELECT DISTINCT ON (QUESTION) QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
+    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY QUESTION
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Transformation: Indicator Lookup Table
+
+    ```sql
+    CREATE OR REPLACE TABLE indicator_map AS
+    SELECT DISTINCT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
+    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY INDICATORID, SUBINDICATORID
+    ```
+    """)
+    return
+
+
 @app.cell
 def _(db_path, mo, run_pipeline):
     import duckdb as _dd
