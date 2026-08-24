@@ -53,7 +53,7 @@ def _(mo):
     mo.Html(
         """
         <div style="background-color: rgba(255, 204, 0, 0.2); padding: 20px; border-left: 4px solid #ffcc00; border-radius: 4px;">
-            &#9888;&#65039; <strong>Attention:</strong> The section below does not describe or analyze the survey results. It shows a sample and statistics of the generated analytical database.
+            &#9888;&#65039; <strong>Attention:</strong> The section below does not describe or analyze the survey results. It shows a sample of, and related statistics for, the resulting analytical database.
         </div>
         """
     )
@@ -118,7 +118,7 @@ def _(table_stats, total_elapsed):
 @app.cell(hide_code=True)
 def _(mo, summary):
     mo.md(f"""
-    ##Results\n\n{summary}
+    ## Pipeline Results\n\n{summary}
     """)
     return
 
@@ -583,7 +583,7 @@ def _(FSQ, con, mo, rundb_button):
 @app.cell
 def _(mo):
     mo.md("""
-    ## Explanation
+    ## Pipeline Explanation
 
     Python and SQL are used to ingest and transform the survey data into an analytical database.
     """)
@@ -930,6 +930,14 @@ def _(db_path, mo, rundb_button):
     summary_con.close()
     if rundb_button:
         mo.md("\n**Pipeline complete!** All tables created successfully.")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Survey Results Analysis
+    """)
     return
 
 
