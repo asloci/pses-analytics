@@ -14,11 +14,11 @@ def _():
 @app.cell
 def _(mo):
     mo.md("""
-    # Data Engineering 🌊🍃 Notebook for the Government of Canada Public Service Employee Survey (PSES)
+    # End-to-End Analytics 🌊🍃 Notebook for the Government of Canada Public Service Employee Survey (PSES)
 
     ## Summary
 
-    This notebook ingested and built an analytical database to display Public Service Employee Survey (PSES) results for longitudinal analysis across themes and sub-themes.
+    This notebook ingested and transformed Public Service Employee Survey (PSES) survey data into an analytical database that was used for longitudinal analysis across themes and sub-themes.
 
     It performed the following steps:
 
@@ -745,10 +745,8 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(app):
-    @app.cell
-    def _(mo):
-        mo.md("""
+def _(mo):
+    mo.md(r"""
     ### Transformation: Demographic/Org Slices
 
     Creates a table with demographic and organizational breakdowns (BYCOND IS NOT NULL).
@@ -779,17 +777,12 @@ def _(app):
       AND LEVEL1ID = 0
     ```
     """)
-        return
-
-
     return
 
 
 @app.cell(hide_code=True)
-def _(app):
-    @app.cell
-    def _(mo):
-        mo.md("""
+def _(mo):
+    mo.md(r"""
     ### Statistical Analysis: Theme Scores
 
     Computes mean SCORE100 per subtheme per year for longitudinal analysis.
@@ -824,17 +817,12 @@ def _(app):
         SURVEYR
     ```
     """)
-        return
-
-
     return
 
 
 @app.cell(hide_code=True)
-def _(app):
-    @app.cell
-    def _(mo):
-        mo.md("""
+def _(mo):
+    mo.md(r"""
     ### Statistical Analysis: Year-over-Year Changes
 
     Computes year-over-year deltas in mean_score per subtheme.
@@ -862,17 +850,12 @@ def _(app):
         a.SURVEYR
     ```
     """)
-        return
-
-
     return
 
 
 @app.cell(hide_code=True)
-def _(app):
-    @app.cell
-    def _(mo):
-        mo.md("""
+def _(mo):
+    mo.md(r"""
     ### Statistical Analysis: Question Correlations
 
     **FLAG: Mixed Python/SQL** - This table uses Python (scipy.stats.pearsonr) to compute Pearson correlation coefficients between question pairs, then stores results in a SQL table.
@@ -907,17 +890,12 @@ def _(app):
     )
     ```
     """)
-        return
-
-
     return
 
 
 @app.cell(hide_code=True)
-def _(app):
-    @app.cell
-    def _(mo):
-        mo.md("""
+def _(mo):
+    mo.md(r"""
     ### Statistical Analysis: Chi-Square Results
 
     **FLAG: Mixed Python/SQL** - This table uses Python (scipy.stats.chi2_contingency) to perform chi-square tests, then stores results in a SQL table.
@@ -959,9 +937,6 @@ def _(app):
     )
     ```
     """)
-        return
-
-
     return
 
 
