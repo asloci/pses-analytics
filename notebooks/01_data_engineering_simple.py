@@ -303,7 +303,7 @@ def _():
 @app.cell
 def _(INT_COLS, con, make_double_expr, make_int_expr, mo, rundb_button):
     if rundb_button:
-        int_exprs = ", ".join(make_int_expr(c) for c in INT_COLS)
+        int_exprs_sliced = ", ".join(make_int_expr(c) for c in INT_COLS)
         score5_expr_sliced = make_double_expr("SCORE5")
 
         con.execute(f"""
@@ -313,7 +313,7 @@ def _(INT_COLS, con, make_double_expr, make_int_expr, mo, rundb_button):
                 QUESTION,
                 BYCOND,
                 DEMCODE,
-                {int_exprs},
+                {int_exprs_sliced},
                 {score5_expr_sliced}
             FROM raw_pses
             WHERE BYCOND IS NOT NULL
