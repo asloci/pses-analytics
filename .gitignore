@@ -20,3 +20,5 @@ PSES_HANDOFF.md
 
 # Local documentation
 docs/
+notebooks/01_data_engineering_simple_backup*.py
+notebooks/01_data_engineering.py
