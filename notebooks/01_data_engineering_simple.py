@@ -306,7 +306,8 @@ def _(mo):
 
     ```sql
     DROP TABLE IF EXISTS raw_pses
-    CREATE TABLE raw_pses AS SELECT * FROM read_csv_auto('https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv', header=true, ignore_errors=true)
+    CREATE TABLE raw_pses AS SELECT *
+    FROM read_csv_auto('https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv', header=true, ignore_errors=true)
     ```
     """)
     return
@@ -328,6 +329,52 @@ def _(mo):
     SELECT DISTINCT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
     FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY INDICATORID, SUBINDICATORID
     ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Transformation: Whole-of-Government Spine
+
+    A combination of Python and SQL is used for this transformation step. A list is created in Python and two helper functions that do the `NULLIF CAST` to a `cols` variable for `9999` and `9999.0`. These are applied to build and execute the SQL that creates the `pses_wog` table.
+
+    ```sql
+    CREATE OR REPLACE TABLE pses_wog AS
+    WITH base AS (SELECT CAST(SURVEYR AS INTEGER) AS SURVEYR, QUESTION, NULLIF(CAST(SCORE100 AS INTEGER), 9999) AS SCORE100, NULLIF(CAST(ANSCOUNT AS INTEGER), 9999) AS ANSCOUNT, NULLIF(CAST(POSITIVE AS INTEGER), 9999) AS POSITIVE, NULLIF(CAST(NEUTRAL AS INTEGER), 9999) AS NEUTRAL, NULLIF(CAST(NEGATIVE AS INTEGER), 9999) AS NEGATIVE, NULLIF(CAST(AGREE AS INTEGER), 9999) AS AGREE, NULLIF(CAST(answer1 AS INTEGER), 9999) AS answer1, NULLIF(CAST(answer2 AS INTEGER), 9999) AS answer2, NULLIF(CAST(answer3 AS INTEGER), 9999) AS answer3, NULLIF(CAST(answer4 AS INTEGER), 9999) AS answer4, NULLIF(CAST(answer5 AS INTEGER), 9999) AS answer5, NULLIF(CAST(answer6 AS INTEGER), 9999) AS answer6, NULLIF(CAST(answer7 AS INTEGER), 9999) AS answer7, NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5 FROM raw_pses WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL),
+    stable_questions AS (SELECT QUESTION FROM raw_pses WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL GROUP BY QUESTION HAVING COUNT(DISTINCT SURVEYR) = (SELECT COUNT(DISTINCT SURVEYR) FROM raw_pses))
+    SELECT b.SURVEYR, b.QUESTION, NULLIF(CAST(SCORE100 AS INTEGER), 9999) AS SCORE100, NULLIF(CAST(ANSCOUNT AS INTEGER), 9999) AS ANSCOUNT, NULLIF(CAST(POSITIVE AS INTEGER), 9999) AS POSITIVE, NULLIF(CAST(NEUTRAL AS INTEGER), 9999) AS NEUTRAL, NULLIF(CAST(NEGATIVE AS INTEGER), 9999) AS NEGATIVE, NULLIF(CAST(AGREE AS INTEGER), 9999) AS AGREE, NULLIF(CAST(answer1 AS INTEGER), 9999) AS answer1, NULLIF(CAST(answer2 AS INTEGER), 9999) AS answer2, NULLIF(CAST(answer3 AS INTEGER), 9999) AS answer3, NULLIF(CAST(answer4 AS INTEGER), 9999) AS answer4, NULLIF(CAST(answer5 AS INTEGER), 9999) AS answer5, NULLIF(CAST(answer6 AS INTEGER), 9999) AS answer6, NULLIF(CAST(answer7 AS INTEGER), 9999) AS answer7, NULLIF(CAST(b.SCORE100 AS INTEGER), 9999) IS NOT NULL AS is_scored, (b.QUESTION IN (SELECT QUESTION FROM stable_questions)) AS is_stable FROM base b
+    ```
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Modern Alternative: Simplified NULL Handling
+
+    Instead of individual `NULLIF(CAST(...))` for each column, modern SQL offers cleaner approaches:
+
+    **Option 1: CASE statement**
+    ```sql
+    CASE WHEN SCORE100 = 9999 THEN NULL ELSE CAST(SCORE100 AS INTEGER) END AS SCORE100
+    ```
+
+    **Option 2: TRY_CAST (DuckDB-specific)**
+    ```sql
+    TRY_CAST(SCORE100 AS INTEGER) AS SCORE100
+    ```
+    Note: This only works if 9999 is outside the target type's valid domain.
+
+    **Option 3: Declarative transform with a mapping**
+    ```python
+    # Define once in Python, apply to all columns
+    transform = lambda col, sentinel=9999: f"CASE WHEN {col} = {sentinel} THEN NULL ELSE CAST({col} AS INTEGER) END AS {col}"
+    ```
+
+    These approaches reduce verbosity while maintaining the same data cleaning logic.
     """)
     return
 
