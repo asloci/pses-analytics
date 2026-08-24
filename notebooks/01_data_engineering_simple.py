@@ -45,7 +45,7 @@ def _(mo):
 def _(mo):
     rundb_button = mo.ui.run_button(label="Generate the PSES Analytical Database (DuckDB format)")
     rundb_button
-    return rundb_button
+    return (rundb_button,)
 
 
 @app.cell
@@ -298,8 +298,10 @@ def _():
         HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
     """
     return (FSQ,)
+
+
 @app.cell
-def _(INT_COLS, make_int_expr, make_double_expr, con, mo, rundb_button):
+def _(INT_COLS, con, make_double_expr, make_int_expr, mo, rundb_button):
     if rundb_button:
         int_exprs = ", ".join(make_int_expr(c) for c in INT_COLS)
         score5_expr_sliced = make_double_expr("SCORE5")
@@ -369,7 +371,6 @@ def _(FSQ, con, mo, rundb_button):
     return
 
 
-
 @app.cell
 def _(con, mo, rundb_button):
     if rundb_button:
@@ -406,7 +407,6 @@ def _(con, mo, rundb_button):
         except:
             mo.md("*yoy_changes table not found*")
     return
-
 
 
 @app.cell
@@ -479,7 +479,6 @@ def _(FSQ, con, mo, rundb_button):
         except:
             mo.md("*question_correlations table not found*")
     return
-
 
 
 @app.cell
@@ -579,7 +578,6 @@ def _(FSQ, con, mo, rundb_button):
         except:
             mo.md("*chi_square_results table not found*")
     return
-
 
 
 @app.cell
