@@ -1,0 +1,8 @@
+SELECT QUESTION, SURVEYR,
+       answer1, answer2, answer3, answer4, answer5,
+       ANSCOUNT
+FROM pses_analysis
+WHERE QUESTION IN ({FSQ})
+  AND QUESTION NOT LIKE 'Q73%'
+  AND SURVEYR IN (2019, 2024)
+ORDER BY QUESTION, SURVEYR

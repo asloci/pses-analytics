@@ -1,0 +1,11 @@
+CREATE OR REPLACE TABLE pses_sliced AS
+SELECT
+    CAST(SURVEYR AS INTEGER) AS SURVEYR,
+    QUESTION,
+    BYCOND,
+    DEMCODE,
+    {int_exprs},
+    {score5_expr}
+FROM raw_pses
+WHERE BYCOND IS NOT NULL
+  AND LEVEL1ID = 0

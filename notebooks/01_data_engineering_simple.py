@@ -73,7 +73,7 @@ def _():
         "Database not built yet. Click **Generate the PSES Analytical Database** "
         "above to download the PSES data and create all analytical tables."
     )
-    return con, db_path, duckdb, no_db_msg
+    return Path, con, db_path, duckdb, no_db_msg
 
 
 @app.cell
@@ -138,24 +138,22 @@ def _(mo, sorted_stats):
 
 
 @app.cell
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     Whole-of-government table sample from the database retrieved using the following SQL statement:
     ```sql
-    SELECT * FROM pses_wog LIMIT 50
+    {Path("sql/sample_pses_wog.sql").read_text()}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(con, mo, no_db_msg):
+def _(Path, con, mo, no_db_msg):
     _tables = [r[0] for r in con.execute("SHOW TABLES").fetchall()]
     (
         mo.sql(
-            f"""
-            SELECT * FROM pses_wog LIMIT 50
-            """,
+            Path("sql/sample_pses_wog.sql").read_text(),
             engine=con,
         )
         if "pses_wog" in _tables
@@ -165,13 +163,11 @@ def _(con, mo, no_db_msg):
 
 
 @app.cell
-def _(db_path, duckdb, no_db_msg, rundb_button):
-    CSV_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv"
+def _(Path, db_path, duckdb, no_db_msg, rundb_button):
     RAW_TABLE = "raw_pses"
     if rundb_button.value:
         pipe_con_1 = duckdb.connect(db_path)
-        pipe_con_1.execute(f"DROP TABLE IF EXISTS {RAW_TABLE}")
-        pipe_con_1.execute(f"CREATE TABLE {RAW_TABLE} AS SELECT * FROM read_csv_auto('{CSV_URL}', header=true, ignore_errors=true)")
+        pipe_con_1.execute(Path("sql/01_raw_pses.sql").read_text())
         row_count_1 = pipe_con_1.execute(f"SELECT COUNT(*) FROM {RAW_TABLE}").fetchone()[0]
         pipe_con_1.close()
         msg_1 = f"**Ingestion Complete**: {row_count_1:,} rows loaded into `{RAW_TABLE}`"
@@ -236,30 +232,27 @@ def _():
 
 
 @app.cell
+def _(INT_COLS, make_double_expr, make_int_expr):
+    int_exprs = ", ".join(make_int_expr(c) for c in INT_COLS)
+    score5_expr = make_double_expr("SCORE5")
+    return int_exprs, score5_expr
+
+
+@app.cell
 def _(
-    INT_COLS,
+    Path,
     RAW_TABLE,
     db_path,
     duckdb,
-    make_double_expr,
-    make_int_expr,
+    int_exprs,
     mo,
     rundb_button,
+    score5_expr,
 ):
     _msg = None
     if rundb_button.value:
         pipe_con_2 = duckdb.connect(db_path)
-        int_exprs = ", ".join(make_int_expr(c) for c in INT_COLS)
-        score5_expr = make_double_expr("SCORE5")
-        shared_select = f"CAST(SURVEYR AS INTEGER) AS SURVEYR, QUESTION, {int_exprs}, {score5_expr}"
-        pipe_con_2.execute(f"""
-            CREATE OR REPLACE TABLE pses_wog AS
-            WITH base AS (SELECT {shared_select}, SCORE100 FROM {RAW_TABLE} WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL),
-            stable_questions AS (SELECT QUESTION FROM {RAW_TABLE} WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL GROUP BY QUESTION HAVING COUNT(DISTINCT SURVEYR) = (SELECT COUNT(DISTINCT SURVEYR) FROM {RAW_TABLE}))
-            SELECT b.SURVEYR, b.QUESTION, {int_exprs}, b.SCORE5,
-                NULLIF(CAST(b.SCORE100 AS INTEGER), 9999) IS NOT NULL AS is_scored,
-                (b.QUESTION IN (SELECT QUESTION FROM stable_questions)) AS is_stable FROM base b
-        """)
+        pipe_con_2.execute(Path("sql/04_pses_wog.sql").read_text().format(int_exprs=int_exprs, score5_expr=score5_expr, RAW_TABLE=RAW_TABLE))
         wog_total = pipe_con_2.execute("SELECT COUNT(*) FROM pses_wog").fetchone()[0]
         pipe_con_2.close()
         _msg = mo.md(f"**pses_wog created**: {wog_total:,} rows")
@@ -268,19 +261,13 @@ def _(
 
 
 @app.cell
-def _(csv_path_1, db_path, duckdb, mo, rundb_button):
+def _(Path, csv_path_1, db_path, duckdb, mo, rundb_button):
     _msg = None
     if rundb_button.value and csv_path_1:
         pipe_con_3 = duckdb.connect(db_path)
-        pipe_con_3.execute("""
-            CREATE OR REPLACE TABLE theme_map AS
-            SELECT DISTINCT ON (QUESTION) QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-            FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY QUESTION""", [csv_path_1])
+        pipe_con_3.execute(Path("sql/02_theme_map.sql").read_text(), [csv_path_1])
         n_theme = pipe_con_3.execute("SELECT COUNT(*) FROM theme_map").fetchone()[0]
-        pipe_con_3.execute("""
-            CREATE OR REPLACE TABLE indicator_map AS
-            SELECT DISTINCT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-            FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY INDICATORID, SUBINDICATORID""", [csv_path_1])
+        pipe_con_3.execute(Path("sql/03_indicator_map.sql").read_text(), [csv_path_1])
         n_indicator = pipe_con_3.execute("SELECT COUNT(*) FROM indicator_map").fetchone()[0]
         import os as _os
         _os.unlink(csv_path_1)
@@ -291,14 +278,11 @@ def _(csv_path_1, db_path, duckdb, mo, rundb_button):
 
 
 @app.cell
-def _(db_path, duckdb, mo, rundb_button):
+def _(Path, db_path, duckdb, mo, rundb_button):
     _msg = None
     if rundb_button.value:
         pipe_con_4 = duckdb.connect(db_path)
-        pipe_con_4.execute("""
-            CREATE OR REPLACE TABLE pses_analysis AS
-            SELECT w.*, t.TITLE_E, t.INDICATORID, t.INDICATORENG, t.SUBINDICATORID, t.SUBINDICATORENG
-            FROM pses_wog w INNER JOIN theme_map t ON w.QUESTION = t.QUESTION""")
+        pipe_con_4.execute(Path("sql/05_pses_analysis.sql").read_text())
         n_analysis = pipe_con_4.execute("SELECT COUNT(*) FROM pses_analysis").fetchone()[0]
         pipe_con_4.close()
         _msg = mo.md(f"**pses_analysis created**: {n_analysis:,} rows")
@@ -320,25 +304,10 @@ def _():
 
 
 @app.cell
-def _(INT_COLS, con, make_double_expr, make_int_expr, mo, no_db_msg, rundb_button):
+def _(Path, con, int_exprs, mo, no_db_msg, rundb_button, score5_expr):
     _msg = None
     if rundb_button.value:
-        int_exprs_sliced = ", ".join(make_int_expr(c) for c in INT_COLS)
-        score5_expr_sliced = make_double_expr("SCORE5")
-
-        con.execute(f"""
-            CREATE OR REPLACE TABLE pses_sliced AS
-            SELECT
-                CAST(SURVEYR AS INTEGER) AS SURVEYR,
-                QUESTION,
-                BYCOND,
-                DEMCODE,
-                {int_exprs_sliced},
-                {score5_expr_sliced}
-            FROM raw_pses
-            WHERE BYCOND IS NOT NULL
-              AND LEVEL1ID = 0
-        """)
+        con.execute(Path("sql/07_pses_sliced.sql").read_text().format(int_exprs=int_exprs, score5_expr=score5_expr))
 
         sliced_total = con.execute("SELECT COUNT(*) FROM pses_sliced").fetchone()[0]
         _msg = mo.md(f"**✓ pses_sliced created**: {sliced_total:,} rows")
@@ -354,32 +323,10 @@ def _(INT_COLS, con, make_double_expr, make_int_expr, mo, no_db_msg, rundb_butto
 
 
 @app.cell
-def _(FSQ, con, mo, no_db_msg, rundb_button):
+def _(Path, FSQ, con, mo, no_db_msg, rundb_button):
     _msg = None
     if rundb_button.value:
-        con.execute(f"""
-            CREATE OR REPLACE TABLE theme_scores AS
-            SELECT
-                SURVEYR,
-                INDICATORID,
-                INDICATORENG,
-                SUBINDICATORID,
-                SUBINDICATORENG,
-                AVG(SCORE100) AS mean_score
-            FROM pses_analysis
-            WHERE QUESTION IN ({FSQ})
-              AND QUESTION NOT LIKE 'Q73%'
-            GROUP BY
-                SURVEYR,
-                INDICATORID,
-                INDICATORENG,
-                SUBINDICATORID,
-                SUBINDICATORENG
-            ORDER BY
-                INDICATORID,
-                SUBINDICATORID,
-                SURVEYR
-        """)
+        con.execute(Path("sql/06_theme_scores.sql").read_text().format(FSQ=FSQ))
 
         n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
         _msg = mo.md(f"**✓ theme_scores created**: {n_theme_scores} rows")
@@ -395,31 +342,10 @@ def _(FSQ, con, mo, no_db_msg, rundb_button):
 
 
 @app.cell
-def _(con, mo, no_db_msg, rundb_button):
+def _(Path, con, mo, no_db_msg, rundb_button):
     _msg = None
     if rundb_button.value:
-        con.execute("""
-            CREATE OR REPLACE TABLE yoy_changes AS
-            SELECT
-                a.SUBINDICATORENG,
-                a.INDICATORENG,
-                a.SURVEYR AS year_from,
-                b.SURVEYR AS year_to,
-                a.mean_score AS score_from,
-                b.mean_score AS score_to,
-                b.mean_score - a.mean_score AS delta
-            FROM theme_scores a
-            JOIN theme_scores b
-              ON a.SUBINDICATORID = b.SUBINDICATORID
-              AND (
-                    (a.SURVEYR = 2019 AND b.SURVEYR = 2020)
-                 OR (a.SURVEYR = 2020 AND b.SURVEYR = 2022)
-                 OR (a.SURVEYR = 2022 AND b.SURVEYR = 2024)
-                  )
-            ORDER BY
-                a.SUBINDICATORENG,
-                a.SURVEYR
-        """)
+        con.execute(Path("sql/08_yoy_changes.sql").read_text())
 
         n_yoy = con.execute("SELECT COUNT(*) FROM yoy_changes").fetchone()[0]
         _msg = mo.md(f"**✓ yoy_changes created**: {n_yoy} rows")
@@ -435,7 +361,7 @@ def _(con, mo, no_db_msg, rundb_button):
 
 
 @app.cell
-def _(FSQ, con, mo, no_db_msg, rundb_button):
+def _(FSQ, Path, con, mo, no_db_msg, rundb_button):
     _msg = None
     if rundb_button.value:
         import itertools
@@ -443,13 +369,7 @@ def _(FSQ, con, mo, no_db_msg, rundb_button):
         from scipy.stats import pearsonr
 
         # One row per (SURVEYR, QUESTION) - spine is already unique on this key
-        long_rows = con.execute(f"""
-            SELECT SURVEYR, QUESTION, SCORE100
-            FROM pses_analysis
-            WHERE QUESTION IN ({FSQ})
-              AND QUESTION NOT LIKE 'Q73%'
-            ORDER BY QUESTION, SURVEYR
-        """).fetchall()
+        long_rows = con.execute(Path("sql/09_corr_fetch.sql").read_text().format(FSQ=FSQ)).fetchall()
 
         # Build pivot: question -> {year: score}
         pivot = defaultdict(dict)
@@ -509,21 +429,12 @@ def _(FSQ, con, mo, no_db_msg, rundb_button):
 
 
 @app.cell
-def _(FSQ, con, mo, no_db_msg, rundb_button):
+def _(FSQ, Path, con, mo, no_db_msg, rundb_button):
     _msg = None
     if rundb_button.value:
         from scipy.stats import chi2_contingency
 
-        rows = con.execute(f"""
-            SELECT QUESTION, SURVEYR,
-                   answer1, answer2, answer3, answer4, answer5,
-                   ANSCOUNT
-            FROM pses_analysis
-            WHERE QUESTION IN ({FSQ})
-              AND QUESTION NOT LIKE 'Q73%'
-              AND SURVEYR IN (2019, 2024)
-            ORDER BY QUESTION, SURVEYR
-        """).fetchall()
+        rows = con.execute(Path("sql/10_chi_fetch.sql").read_text().format(FSQ=FSQ)).fetchall()
 
         # Fetch indicator labels
         labels = {
@@ -615,59 +526,53 @@ def _(mo):
     mo.md("""
     ## Pipeline Explanation
 
+    This section documents the SQL methodology used to build the analytical tables.
     Python and SQL are used to ingest and transform the survey data into an analytical database.
+    See the [DuckDB SQL documentation](https://duckdb.org/docs/sql/) for function reference,
+    including `read_csv_auto()` and `?` parameter binding used below.
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     ### Ingestion: Raw Data
 
     Loads the main PSES dataset from CSV into DuckDB.
 
     ```sql
-    DROP TABLE IF EXISTS raw_pses
-    CREATE TABLE raw_pses AS SELECT *
-    FROM read_csv_auto('https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv', header=true, ignore_errors=true)
+    {Path("sql/01_raw_pses.sql").read_text()}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     ### Ingestion: Theme Taxonomy
 
     Loads the theme/indicator taxonomy from Subset 1 CSV.
 
     ```sql
-    CREATE OR REPLACE TABLE theme_map AS
-    SELECT DISTINCT ON (QUESTION) QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY QUESTION
+    {Path("sql/02_theme_map.sql").read_text()}
 
-    CREATE OR REPLACE TABLE indicator_map AS
-    SELECT DISTINCT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY INDICATORID, SUBINDICATORID
+    {Path("sql/03_indicator_map.sql").read_text()}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, RAW_TABLE, int_exprs, mo, score5_expr):
+    mo.md(f"""
     ### Transformation: Whole-of-Government Spine (Legacyu)
 
     A combination of Python and SQL is used for this transformation step. A list is created in Python and two helper functions that do the `NULLIF CAST` to a `cols` variable for `9999` and `9999.0`. These are applied to build and execute the SQL that creates the `pses_wog` table.
 
     ```sql
-    CREATE OR REPLACE TABLE pses_wog AS
-    WITH base AS (SELECT CAST(SURVEYR AS INTEGER) AS SURVEYR, QUESTION, NULLIF(CAST(SCORE100 AS INTEGER), 9999) AS SCORE100, NULLIF(CAST(ANSCOUNT AS INTEGER), 9999) AS ANSCOUNT, NULLIF(CAST(POSITIVE AS INTEGER), 9999) AS POSITIVE, NULLIF(CAST(NEUTRAL AS INTEGER), 9999) AS NEUTRAL, NULLIF(CAST(NEGATIVE AS INTEGER), 9999) AS NEGATIVE, NULLIF(CAST(AGREE AS INTEGER), 9999) AS AGREE, NULLIF(CAST(answer1 AS INTEGER), 9999) AS answer1, NULLIF(CAST(answer2 AS INTEGER), 9999) AS answer2, NULLIF(CAST(answer3 AS INTEGER), 9999) AS answer3, NULLIF(CAST(answer4 AS INTEGER), 9999) AS answer4, NULLIF(CAST(answer5 AS INTEGER), 9999) AS answer5, NULLIF(CAST(answer6 AS INTEGER), 9999) AS answer6, NULLIF(CAST(answer7 AS INTEGER), 9999) AS answer7, NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5 FROM raw_pses WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL),
-    stable_questions AS (SELECT QUESTION FROM raw_pses WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL GROUP BY QUESTION HAVING COUNT(DISTINCT SURVEYR) = (SELECT COUNT(DISTINCT SURVEYR) FROM raw_pses))
-    SELECT b.SURVEYR, b.QUESTION, NULLIF(CAST(SCORE100 AS INTEGER), 9999) AS SCORE100, NULLIF(CAST(ANSCOUNT AS INTEGER), 9999) AS ANSCOUNT, NULLIF(CAST(POSITIVE AS INTEGER), 9999) AS POSITIVE, NULLIF(CAST(NEUTRAL AS INTEGER), 9999) AS NEUTRAL, NULLIF(CAST(NEGATIVE AS INTEGER), 9999) AS NEGATIVE, NULLIF(CAST(AGREE AS INTEGER), 9999) AS AGREE, NULLIF(CAST(answer1 AS INTEGER), 9999) AS answer1, NULLIF(CAST(answer2 AS INTEGER), 9999) AS answer2, NULLIF(CAST(answer3 AS INTEGER), 9999) AS answer3, NULLIF(CAST(answer4 AS INTEGER), 9999) AS answer4, NULLIF(CAST(answer5 AS INTEGER), 9999) AS answer5, NULLIF(CAST(answer6 AS INTEGER), 9999) AS answer6, NULLIF(CAST(answer7 AS INTEGER), 9999) AS answer7, NULLIF(CAST(b.SCORE100 AS INTEGER), 9999) IS NOT NULL AS is_scored, (b.QUESTION IN (SELECT QUESTION FROM stable_questions)) AS is_stable FROM base b
+    {Path("sql/04_pses_wog.sql").read_text().format(int_exprs=int_exprs, score5_expr=score5_expr, RAW_TABLE=RAW_TABLE)}
     ```
     """)
     return
@@ -703,176 +608,93 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     ### Transformation: Theme Lookup Table
 
     ```sql
-    CREATE OR REPLACE TABLE theme_map AS
-    SELECT DISTINCT ON (QUESTION) QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY QUESTION
+    {Path("sql/02_theme_map.sql").read_text()}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     ### Transformation: Indicator Lookup Table
 
     ```sql
-    CREATE OR REPLACE TABLE indicator_map AS
-    SELECT DISTINCT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY INDICATORID, SUBINDICATORID
+    {Path("sql/03_indicator_map.sql").read_text()}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     ### Transformation: Analytical Table
 
     ```sql
-    CREATE OR REPLACE TABLE pses_analysis AS
-    SELECT w.*, t.TITLE_E, t.INDICATORID, t.INDICATORENG, t.SUBINDICATORID, t.SUBINDICATORENG
-    FROM pses_wog w INNER JOIN theme_map t ON w.QUESTION = t.QUESTION
+    {Path("sql/05_pses_analysis.sql").read_text()}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(Path, int_exprs, mo, score5_expr):
+    mo.md(f"""
     ### Transformation: Demographic/Org Slices
 
     Creates a table with demographic and organizational breakdowns (BYCOND IS NOT NULL).
 
     ```sql
-    CREATE OR REPLACE TABLE pses_sliced AS
-    SELECT
-        CAST(SURVEYR AS INTEGER) AS SURVEYR,
-        QUESTION,
-        BYCOND,
-        DEMCODE,
-        NULLIF(CAST(SCORE100 AS INTEGER), 9999) AS SCORE100,
-        NULLIF(CAST(ANSCOUNT AS INTEGER), 9999) AS ANSCOUNT,
-        NULLIF(CAST(POSITIVE AS INTEGER), 9999) AS POSITIVE,
-        NULLIF(CAST(NEUTRAL AS INTEGER), 9999) AS NEUTRAL,
-        NULLIF(CAST(NEGATIVE AS INTEGER), 9999) AS NEGATIVE,
-        NULLIF(CAST(AGREE AS INTEGER), 9999) AS AGREE,
-        NULLIF(CAST(answer1 AS INTEGER), 9999) AS answer1,
-        NULLIF(CAST(answer2 AS INTEGER), 9999) AS answer2,
-        NULLIF(CAST(answer3 AS INTEGER), 9999) AS answer3,
-        NULLIF(CAST(answer4 AS INTEGER), 9999) AS answer4,
-        NULLIF(CAST(answer5 AS INTEGER), 9999) AS answer5,
-        NULLIF(CAST(answer6 AS INTEGER), 9999) AS answer6,
-        NULLIF(CAST(answer7 AS INTEGER), 9999) AS answer7,
-        NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5
-    FROM raw_pses
-    WHERE BYCOND IS NOT NULL
-      AND LEVEL1ID = 0
+    {Path("sql/07_pses_sliced.sql").read_text().format(int_exprs=int_exprs, score5_expr=score5_expr)}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(Path, FSQ, mo):
+    mo.md(f"""
     ### Statistical Analysis: Theme Scores
 
     Computes mean SCORE100 per subtheme per year for longitudinal analysis.
 
     ```sql
-    CREATE OR REPLACE TABLE theme_scores AS
-    SELECT
-        SURVEYR,
-        INDICATORID,
-        INDICATORENG,
-        SUBINDICATORID,
-        SUBINDICATORENG,
-        AVG(SCORE100) AS mean_score
-    FROM pses_analysis
-    WHERE QUESTION IN (
-        SELECT QUESTION
-        FROM pses_analysis
-        WHERE is_stable = true
-        GROUP BY QUESTION
-        HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
-    )
-      AND QUESTION NOT LIKE 'Q73%'
-    GROUP BY
-        SURVEYR,
-        INDICATORID,
-        INDICATORENG,
-        SUBINDICATORID,
-        SUBINDICATORENG
-    ORDER BY
-        INDICATORID,
-        SUBINDICATORID,
-        SURVEYR
+    {Path("sql/06_theme_scores.sql").read_text().format(FSQ=FSQ)}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(Path, mo):
+    mo.md(f"""
     ### Statistical Analysis: Year-over-Year Changes
 
     Computes year-over-year deltas in mean_score per subtheme.
 
     ```sql
-    CREATE OR REPLACE TABLE yoy_changes AS
-    SELECT
-        a.SUBINDICATORENG,
-        a.INDICATORENG,
-        a.SURVEYR AS year_from,
-        b.SURVEYR AS year_to,
-        a.mean_score AS score_from,
-        b.mean_score AS score_to,
-        b.mean_score - a.mean_score AS delta
-    FROM theme_scores a
-    JOIN theme_scores b
-      ON a.SUBINDICATORID = b.SUBINDICATORID
-      AND (
-            (a.SURVEYR = 2019 AND b.SURVEYR = 2020)
-         OR (a.SURVEYR = 2020 AND b.SURVEYR = 2022)
-         OR (a.SURVEYR = 2022 AND b.SURVEYR = 2024)
-          )
-    ORDER BY
-        a.SUBINDICATORENG,
-        a.SURVEYR
+    {Path("sql/08_yoy_changes.sql").read_text()}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(FSQ, Path, mo):
+    mo.md(f"""
     ### Statistical Analysis: Question Correlations
 
     **FLAG: Mixed Python/SQL** - This table uses Python (scipy.stats.pearsonr) to compute Pearson correlation coefficients between question pairs, then stores results in a SQL table.
 
     The SQL extracts data from pses_analysis:
     ```sql
-    SELECT SURVEYR, QUESTION, SCORE100
-    FROM pses_analysis
-    WHERE QUESTION IN (
-        SELECT QUESTION
-        FROM pses_analysis
-        WHERE is_stable = true
-        GROUP BY QUESTION
-        HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
-    )
-      AND QUESTION NOT LIKE 'Q73%'
-    ORDER BY QUESTION, SURVEYR
+    {Path("sql/09_corr_fetch.sql").read_text().format(FSQ=FSQ)}
     ```
 
     Python then:
@@ -894,28 +716,15 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(FSQ, Path, mo):
+    mo.md(f"""
     ### Statistical Analysis: Chi-Square Results
 
     **FLAG: Mixed Python/SQL** - This table uses Python (scipy.stats.chi2_contingency) to perform chi-square tests, then stores results in a SQL table.
 
     The SQL extracts answer distribution data:
     ```sql
-    SELECT QUESTION, SURVEYR,
-           answer1, answer2, answer3, answer4, answer5,
-           ANSCOUNT
-    FROM pses_analysis
-    WHERE QUESTION IN (
-        SELECT QUESTION
-        FROM pses_analysis
-        WHERE is_stable = true
-        GROUP BY QUESTION
-        HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
-    )
-      AND QUESTION NOT LIKE 'Q73%'
-      AND SURVEYR IN (2019, 2024)
-    ORDER BY QUESTION, SURVEYR
+    {Path("sql/10_chi_fetch.sql").read_text().format(FSQ=FSQ)}
     ```
 
     Python then:
