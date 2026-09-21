@@ -8,17 +8,20 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Generated data (built by the notebook, not tracked)
 data/
 *.duckdb
-.DS_Store
 
-# Accidental binary file
+# OS / accidental
+.DS_Store
 self
 
-# Historical documentation (moved to Projects folder)
+# Historical / local documentation
 PSES_HANDOFF.md
-
-# Local documentation
 docs/
-notebooks/01_data_engineering_simple_backup*.py
-notebooks/01_data_engineering.py
+
+# Local-only archive: superseded notebooks and backups (safe to delete)
+archive/
+notebooks/*_backup*.py
+notebooks/*.backup

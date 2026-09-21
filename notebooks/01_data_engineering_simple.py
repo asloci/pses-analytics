@@ -66,7 +66,7 @@ def _():
     import os
     from pathlib import Path
 
-    db_path = str(Path("../data") / "pses.duckdb")
+    db_path = str(Path("data") / "pses.duckdb")
     con = duckdb.connect(db_path)
     return con, db_path, duckdb
 
@@ -155,7 +155,7 @@ def _(con, mo):
 def _(db_path, duckdb, rundb_button):
     CSV_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv"
     RAW_TABLE = "raw_pses"
-    if rundb_button:
+    if rundb_button.value:
         pipe_con_1 = duckdb.connect(db_path)
         pipe_con_1.execute(f"DROP TABLE IF EXISTS {RAW_TABLE}")
         pipe_con_1.execute(f"CREATE TABLE {RAW_TABLE} AS SELECT * FROM read_csv_auto('{CSV_URL}', header=true, ignore_errors=true)")
@@ -200,7 +200,7 @@ def _():
 
 @app.cell
 def _(fetch_with_bom_strip, mo, rundb_button):
-    if rundb_button:
+    if rundb_button.value:
         SUBSET1_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv"
         csv_path_1 = fetch_with_bom_strip(SUBSET1_URL)
         mo.md(f"**Fetched theme CSV**: {SUBSET1_URL}")
@@ -232,7 +232,7 @@ def _(
     mo,
     rundb_button,
 ):
-    if rundb_button:
+    if rundb_button.value:
         pipe_con_2 = duckdb.connect(db_path)
         int_exprs = ", ".join(make_int_expr(c) for c in INT_COLS)
         score5_expr = make_double_expr("SCORE5")
@@ -253,7 +253,7 @@ def _(
 
 @app.cell
 def _(csv_path_1, db_path, duckdb, mo, rundb_button):
-    if rundb_button and csv_path_1:
+    if rundb_button.value and csv_path_1:
         pipe_con_3 = duckdb.connect(db_path)
         pipe_con_3.execute("""
             CREATE OR REPLACE TABLE theme_map AS
@@ -275,7 +275,7 @@ def _(csv_path_1, db_path, duckdb, mo, rundb_button):
 
 @app.cell
 def _(db_path, duckdb, mo, rundb_button):
-    if rundb_button:
+    if rundb_button.value:
         pipe_con_4 = duckdb.connect(db_path)
         pipe_con_4.execute("""
             CREATE OR REPLACE TABLE pses_analysis AS
@@ -302,7 +302,7 @@ def _():
 
 @app.cell
 def _(INT_COLS, con, make_double_expr, make_int_expr, mo, rundb_button):
-    if rundb_button:
+    if rundb_button.value:
         int_exprs_sliced = ", ".join(make_int_expr(c) for c in INT_COLS)
         score5_expr_sliced = make_double_expr("SCORE5")
 
@@ -334,7 +334,7 @@ def _(INT_COLS, con, make_double_expr, make_int_expr, mo, rundb_button):
 
 @app.cell
 def _(FSQ, con, mo, rundb_button):
-    if rundb_button:
+    if rundb_button.value:
         con.execute(f"""
             CREATE OR REPLACE TABLE theme_scores AS
             SELECT
@@ -373,7 +373,7 @@ def _(FSQ, con, mo, rundb_button):
 
 @app.cell
 def _(con, mo, rundb_button):
-    if rundb_button:
+    if rundb_button.value:
         con.execute("""
             CREATE OR REPLACE TABLE yoy_changes AS
             SELECT
@@ -411,7 +411,7 @@ def _(con, mo, rundb_button):
 
 @app.cell
 def _(FSQ, con, mo, rundb_button):
-    if rundb_button:
+    if rundb_button.value:
         import itertools
         from collections import defaultdict
         from scipy.stats import pearsonr
@@ -483,7 +483,7 @@ def _(FSQ, con, mo, rundb_button):
 
 @app.cell
 def _(FSQ, con, mo, rundb_button):
-    if rundb_button:
+    if rundb_button.value:
         from scipy.stats import chi2_contingency
 
         rows = con.execute(f"""
@@ -928,7 +928,7 @@ def _(db_path, mo, rundb_button):
         except Exception:
             mo.md(f"| `{t}` | N/A | Not yet created |")
     summary_con.close()
-    if rundb_button:
+    if rundb_button.value:
         mo.md("\n**Pipeline complete!** All tables created successfully.")
     return
 
