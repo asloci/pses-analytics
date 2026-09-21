@@ -361,7 +361,7 @@ def _(Path, con, mo, no_db_msg, rundb_button):
 
 
 @app.cell
-def _(FSQ, con, mo, no_db_msg, rundb_button):
+def _(FSQ, Path, con, mo, no_db_msg, rundb_button):
     _msg = None
     if rundb_button.value:
         import itertools
@@ -369,13 +369,7 @@ def _(FSQ, con, mo, no_db_msg, rundb_button):
         from scipy.stats import pearsonr
 
         # One row per (SURVEYR, QUESTION) - spine is already unique on this key
-        long_rows = con.execute(f"""
-            SELECT SURVEYR, QUESTION, SCORE100
-            FROM pses_analysis
-            WHERE QUESTION IN ({FSQ})
-              AND QUESTION NOT LIKE 'Q73%'
-            ORDER BY QUESTION, SURVEYR
-        """).fetchall()
+        long_rows = con.execute(Path("sql/09_corr_fetch.sql").read_text().format(FSQ=FSQ)).fetchall()
 
         # Build pivot: question -> {year: score}
         pivot = defaultdict(dict)
@@ -435,21 +429,12 @@ def _(FSQ, con, mo, no_db_msg, rundb_button):
 
 
 @app.cell
-def _(FSQ, con, mo, no_db_msg, rundb_button):
+def _(FSQ, Path, con, mo, no_db_msg, rundb_button):
     _msg = None
     if rundb_button.value:
         from scipy.stats import chi2_contingency
 
-        rows = con.execute(f"""
-            SELECT QUESTION, SURVEYR,
-                   answer1, answer2, answer3, answer4, answer5,
-                   ANSCOUNT
-            FROM pses_analysis
-            WHERE QUESTION IN ({FSQ})
-              AND QUESTION NOT LIKE 'Q73%'
-              AND SURVEYR IN (2019, 2024)
-            ORDER BY QUESTION, SURVEYR
-        """).fetchall()
+        rows = con.execute(Path("sql/10_chi_fetch.sql").read_text().format(FSQ=FSQ)).fetchall()
 
         # Fetch indicator labels
         labels = {
@@ -701,25 +686,15 @@ def _(Path, mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(FSQ, Path, mo):
+    mo.md(f"""
     ### Statistical Analysis: Question Correlations
 
     **FLAG: Mixed Python/SQL** - This table uses Python (scipy.stats.pearsonr) to compute Pearson correlation coefficients between question pairs, then stores results in a SQL table.
 
     The SQL extracts data from pses_analysis:
     ```sql
-    SELECT SURVEYR, QUESTION, SCORE100
-    FROM pses_analysis
-    WHERE QUESTION IN (
-        SELECT QUESTION
-        FROM pses_analysis
-        WHERE is_stable = true
-        GROUP BY QUESTION
-        HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
-    )
-      AND QUESTION NOT LIKE 'Q73%'
-    ORDER BY QUESTION, SURVEYR
+    {Path("sql/09_corr_fetch.sql").read_text().format(FSQ=FSQ)}
     ```
 
     Python then:
@@ -741,28 +716,15 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(FSQ, Path, mo):
+    mo.md(f"""
     ### Statistical Analysis: Chi-Square Results
 
     **FLAG: Mixed Python/SQL** - This table uses Python (scipy.stats.chi2_contingency) to perform chi-square tests, then stores results in a SQL table.
 
     The SQL extracts answer distribution data:
     ```sql
-    SELECT QUESTION, SURVEYR,
-           answer1, answer2, answer3, answer4, answer5,
-           ANSCOUNT
-    FROM pses_analysis
-    WHERE QUESTION IN (
-        SELECT QUESTION
-        FROM pses_analysis
-        WHERE is_stable = true
-        GROUP BY QUESTION
-        HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
-    )
-      AND QUESTION NOT LIKE 'Q73%'
-      AND SURVEYR IN (2019, 2024)
-    ORDER BY QUESTION, SURVEYR
+    {Path("sql/10_chi_fetch.sql").read_text().format(FSQ=FSQ)}
     ```
 
     Python then:
