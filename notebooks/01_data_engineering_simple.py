@@ -73,7 +73,7 @@ def _():
         "Database not built yet. Click **Generate the PSES Analytical Database** "
         "above to download the PSES data and create all analytical tables."
     )
-    return con, db_path, duckdb, no_db_msg
+    return Path, con, db_path, duckdb, no_db_msg
 
 
 @app.cell
@@ -138,24 +138,22 @@ def _(mo, sorted_stats):
 
 
 @app.cell
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     Whole-of-government table sample from the database retrieved using the following SQL statement:
     ```sql
-    SELECT * FROM pses_wog LIMIT 50
+    {Path("sql/sample_pses_wog.sql").read_text()}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(con, mo, no_db_msg):
+def _(Path, con, mo, no_db_msg):
     _tables = [r[0] for r in con.execute("SHOW TABLES").fetchall()]
     (
         mo.sql(
-            f"""
-            SELECT * FROM pses_wog LIMIT 50
-            """,
+            Path("sql/sample_pses_wog.sql").read_text(),
             engine=con,
         )
         if "pses_wog" in _tables
@@ -291,14 +289,11 @@ def _(csv_path_1, db_path, duckdb, mo, rundb_button):
 
 
 @app.cell
-def _(db_path, duckdb, mo, rundb_button):
+def _(Path, db_path, duckdb, mo, rundb_button):
     _msg = None
     if rundb_button.value:
         pipe_con_4 = duckdb.connect(db_path)
-        pipe_con_4.execute("""
-            CREATE OR REPLACE TABLE pses_analysis AS
-            SELECT w.*, t.TITLE_E, t.INDICATORID, t.INDICATORENG, t.SUBINDICATORID, t.SUBINDICATORENG
-            FROM pses_wog w INNER JOIN theme_map t ON w.QUESTION = t.QUESTION""")
+        pipe_con_4.execute(Path("sql/05_pses_analysis.sql").read_text())
         n_analysis = pipe_con_4.execute("SELECT COUNT(*) FROM pses_analysis").fetchone()[0]
         pipe_con_4.close()
         _msg = mo.md(f"**pses_analysis created**: {n_analysis:,} rows")
@@ -395,31 +390,10 @@ def _(FSQ, con, mo, no_db_msg, rundb_button):
 
 
 @app.cell
-def _(con, mo, no_db_msg, rundb_button):
+def _(Path, con, mo, no_db_msg, rundb_button):
     _msg = None
     if rundb_button.value:
-        con.execute("""
-            CREATE OR REPLACE TABLE yoy_changes AS
-            SELECT
-                a.SUBINDICATORENG,
-                a.INDICATORENG,
-                a.SURVEYR AS year_from,
-                b.SURVEYR AS year_to,
-                a.mean_score AS score_from,
-                b.mean_score AS score_to,
-                b.mean_score - a.mean_score AS delta
-            FROM theme_scores a
-            JOIN theme_scores b
-              ON a.SUBINDICATORID = b.SUBINDICATORID
-              AND (
-                    (a.SURVEYR = 2019 AND b.SURVEYR = 2020)
-                 OR (a.SURVEYR = 2020 AND b.SURVEYR = 2022)
-                 OR (a.SURVEYR = 2022 AND b.SURVEYR = 2024)
-                  )
-            ORDER BY
-                a.SUBINDICATORENG,
-                a.SURVEYR
-        """)
+        con.execute(Path("sql/08_yoy_changes.sql").read_text())
 
         n_yoy = con.execute("SELECT COUNT(*) FROM yoy_changes").fetchone()[0]
         _msg = mo.md(f"**✓ yoy_changes created**: {n_yoy} rows")
@@ -731,14 +705,12 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     ### Transformation: Analytical Table
 
     ```sql
-    CREATE OR REPLACE TABLE pses_analysis AS
-    SELECT w.*, t.TITLE_E, t.INDICATORID, t.INDICATORENG, t.SUBINDICATORID, t.SUBINDICATORENG
-    FROM pses_wog w INNER JOIN theme_map t ON w.QUESTION = t.QUESTION
+    {Path("sql/05_pses_analysis.sql").read_text()}
     ```
     """)
     return
@@ -821,33 +793,14 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(Path, mo):
+    mo.md(f"""
     ### Statistical Analysis: Year-over-Year Changes
 
     Computes year-over-year deltas in mean_score per subtheme.
 
     ```sql
-    CREATE OR REPLACE TABLE yoy_changes AS
-    SELECT
-        a.SUBINDICATORENG,
-        a.INDICATORENG,
-        a.SURVEYR AS year_from,
-        b.SURVEYR AS year_to,
-        a.mean_score AS score_from,
-        b.mean_score AS score_to,
-        b.mean_score - a.mean_score AS delta
-    FROM theme_scores a
-    JOIN theme_scores b
-      ON a.SUBINDICATORID = b.SUBINDICATORID
-      AND (
-            (a.SURVEYR = 2019 AND b.SURVEYR = 2020)
-         OR (a.SURVEYR = 2020 AND b.SURVEYR = 2022)
-         OR (a.SURVEYR = 2022 AND b.SURVEYR = 2024)
-          )
-    ORDER BY
-        a.SUBINDICATORENG,
-        a.SURVEYR
+    {Path("sql/08_yoy_changes.sql").read_text()}
     ```
     """)
     return

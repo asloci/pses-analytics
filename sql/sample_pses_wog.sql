@@ -1,0 +1,1 @@
+SELECT * FROM pses_wog LIMIT 50
