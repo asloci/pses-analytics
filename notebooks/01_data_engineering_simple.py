@@ -213,12 +213,13 @@ def _():
 
 @app.cell
 def _(fetch_with_bom_strip, mo, rundb_button):
+    csv_path_1 = None
+    _msg = None
     if rundb_button.value:
         SUBSET1_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/subset-1-sous-ensemble-1.csv"
         csv_path_1 = fetch_with_bom_strip(SUBSET1_URL)
-        mo.md(f"**Fetched theme CSV**: {SUBSET1_URL}")
-    else:
-        csv_path_1 = None
+        _msg = mo.md(f"**Fetched theme CSV**: {SUBSET1_URL}")
+    _msg
     return (csv_path_1,)
 
 
@@ -245,6 +246,7 @@ def _(
     mo,
     rundb_button,
 ):
+    _msg = None
     if rundb_button.value:
         pipe_con_2 = duckdb.connect(db_path)
         int_exprs = ", ".join(make_int_expr(c) for c in INT_COLS)
@@ -260,12 +262,14 @@ def _(
         """)
         wog_total = pipe_con_2.execute("SELECT COUNT(*) FROM pses_wog").fetchone()[0]
         pipe_con_2.close()
-        mo.md(f"**pses_wog created**: {wog_total:,} rows")
+        _msg = mo.md(f"**pses_wog created**: {wog_total:,} rows")
+    _msg
     return
 
 
 @app.cell
 def _(csv_path_1, db_path, duckdb, mo, rundb_button):
+    _msg = None
     if rundb_button.value and csv_path_1:
         pipe_con_3 = duckdb.connect(db_path)
         pipe_con_3.execute("""
@@ -273,21 +277,22 @@ def _(csv_path_1, db_path, duckdb, mo, rundb_button):
             SELECT DISTINCT ON (QUESTION) QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
             FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY QUESTION""", [csv_path_1])
         n_theme = pipe_con_3.execute("SELECT COUNT(*) FROM theme_map").fetchone()[0]
-        mo.md(f"**theme_map created**: {n_theme} rows")
         pipe_con_3.execute("""
             CREATE OR REPLACE TABLE indicator_map AS
             SELECT DISTINCT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
             FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY INDICATORID, SUBINDICATORID""", [csv_path_1])
         n_indicator = pipe_con_3.execute("SELECT COUNT(*) FROM indicator_map").fetchone()[0]
-        mo.md(f"**indicator_map created**: {n_indicator} rows")
         import os as _os
         _os.unlink(csv_path_1)
         pipe_con_3.close()
+        _msg = mo.md(f"**theme_map created**: {n_theme} rows  \n**indicator_map created**: {n_indicator} rows")
+    _msg
     return
 
 
 @app.cell
 def _(db_path, duckdb, mo, rundb_button):
+    _msg = None
     if rundb_button.value:
         pipe_con_4 = duckdb.connect(db_path)
         pipe_con_4.execute("""
@@ -296,7 +301,8 @@ def _(db_path, duckdb, mo, rundb_button):
             FROM pses_wog w INNER JOIN theme_map t ON w.QUESTION = t.QUESTION""")
         n_analysis = pipe_con_4.execute("SELECT COUNT(*) FROM pses_analysis").fetchone()[0]
         pipe_con_4.close()
-        mo.md(f"**pses_analysis created**: {n_analysis:,} rows")
+        _msg = mo.md(f"**pses_analysis created**: {n_analysis:,} rows")
+    _msg
     return
 
 
@@ -315,6 +321,7 @@ def _():
 
 @app.cell
 def _(INT_COLS, con, make_double_expr, make_int_expr, mo, no_db_msg, rundb_button):
+    _msg = None
     if rundb_button.value:
         int_exprs_sliced = ", ".join(make_int_expr(c) for c in INT_COLS)
         score5_expr_sliced = make_double_expr("SCORE5")
@@ -334,19 +341,21 @@ def _(INT_COLS, con, make_double_expr, make_int_expr, mo, no_db_msg, rundb_butto
         """)
 
         sliced_total = con.execute("SELECT COUNT(*) FROM pses_sliced").fetchone()[0]
-        mo.md(f"**✓ pses_sliced created**: {sliced_total:,} rows")
+        _msg = mo.md(f"**✓ pses_sliced created**: {sliced_total:,} rows")
     else:
         # Use existing table if available
         try:
             sliced_total = con.execute("SELECT COUNT(*) FROM pses_sliced").fetchone()[0]
-            mo.md(f"**Using existing pses_sliced**: {sliced_total:,} rows")
+            _msg = mo.md(f"**Using existing pses_sliced**: {sliced_total:,} rows")
         except:
-            mo.md(no_db_msg)
+            _msg = mo.md(no_db_msg)
+    _msg
     return
 
 
 @app.cell
 def _(FSQ, con, mo, no_db_msg, rundb_button):
+    _msg = None
     if rundb_button.value:
         con.execute(f"""
             CREATE OR REPLACE TABLE theme_scores AS
@@ -373,19 +382,21 @@ def _(FSQ, con, mo, no_db_msg, rundb_button):
         """)
 
         n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
-        mo.md(f"**✓ theme_scores created**: {n_theme_scores} rows")
+        _msg = mo.md(f"**✓ theme_scores created**: {n_theme_scores} rows")
     else:
         # Use existing table if available
         try:
             n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
-            mo.md(f"**Using existing theme_scores**: {n_theme_scores} rows")
+            _msg = mo.md(f"**Using existing theme_scores**: {n_theme_scores} rows")
         except:
-            mo.md(no_db_msg)
+            _msg = mo.md(no_db_msg)
+    _msg
     return
 
 
 @app.cell
 def _(con, mo, no_db_msg, rundb_button):
+    _msg = None
     if rundb_button.value:
         con.execute("""
             CREATE OR REPLACE TABLE yoy_changes AS
@@ -411,19 +422,21 @@ def _(con, mo, no_db_msg, rundb_button):
         """)
 
         n_yoy = con.execute("SELECT COUNT(*) FROM yoy_changes").fetchone()[0]
-        mo.md(f"**✓ yoy_changes created**: {n_yoy} rows")
+        _msg = mo.md(f"**✓ yoy_changes created**: {n_yoy} rows")
     else:
         # Use existing table if available
         try:
             n_yoy = con.execute("SELECT COUNT(*) FROM yoy_changes").fetchone()[0]
-            mo.md(f"**Using existing yoy_changes**: {n_yoy} rows")
+            _msg = mo.md(f"**Using existing yoy_changes**: {n_yoy} rows")
         except:
-            mo.md(no_db_msg)
+            _msg = mo.md(no_db_msg)
+    _msg
     return
 
 
 @app.cell
 def _(FSQ, con, mo, no_db_msg, rundb_button):
+    _msg = None
     if rundb_button.value:
         import itertools
         from collections import defaultdict
@@ -483,19 +496,21 @@ def _(FSQ, con, mo, no_db_msg, rundb_button):
         )
 
         n_corr = len(corr_rows)
-        mo.md(f"**✓ question_correlations created**: {n_corr:,} rows")
+        _msg = mo.md(f"**✓ question_correlations created**: {n_corr:,} rows")
     else:
         # Use existing table if available
         try:
             n_corr = con.execute("SELECT COUNT(*) FROM question_correlations").fetchone()[0]
-            mo.md(f"**Using existing question_correlations**: {n_corr:,} rows")
+            _msg = mo.md(f"**Using existing question_correlations**: {n_corr:,} rows")
         except:
-            mo.md(no_db_msg)
+            _msg = mo.md(no_db_msg)
+    _msg
     return
 
 
 @app.cell
 def _(FSQ, con, mo, no_db_msg, rundb_button):
+    _msg = None
     if rundb_button.value:
         from scipy.stats import chi2_contingency
 
@@ -578,18 +593,20 @@ def _(FSQ, con, mo, no_db_msg, rundb_button):
                 "INSERT INTO chi_square_results VALUES (?, ?, ?, ?, ?, ?, ?)",
                 chi_rows,
             )
-        else:
-            mo.md("**Note**: No questions met the criteria for chi-square testing. chi_square_results remain empty.")
 
         n_chi = len(chi_rows)
-        mo.md(f"**✓ chi_square_results created**: {n_chi} rows")
+        if n_chi == 0:
+            _msg = mo.md("**Note**: No questions met the criteria for chi-square testing. chi_square_results remain empty.")
+        else:
+            _msg = mo.md(f"**✓ chi_square_results created**: {n_chi} rows")
     else:
         # Use existing table if available
         try:
             n_chi = con.execute("SELECT COUNT(*) FROM chi_square_results").fetchone()[0]
-            mo.md(f"**Using existing chi_square_results**: {n_chi} rows")
+            _msg = mo.md(f"**Using existing chi_square_results**: {n_chi} rows")
         except:
-            mo.md(no_db_msg)
+            _msg = mo.md(no_db_msg)
+    _msg
     return
 
 
@@ -928,21 +945,24 @@ def _(db_path, mo, rundb_button):
     import duckdb as _dd
     summary_con = _dd.connect(db_path)
     tables = ["raw_pses", "theme_map", "indicator_map", "pses_wog", "pses_analysis"]
-    mo.md("**Table Summary:**")
-    mo.md("| Table | Rows | Description |")
-    mo.md("|-------|------|-------------|")
+    d = {"raw_pses": "Full ingested dataset", "theme_map": "Question-theme lookup",
+         "indicator_map": "Theme reference", "pses_wog": "WOG spine",
+         "pses_analysis": "Primary analytical table"}
+    _lines = [
+        "**Table Summary:**",
+        "| Table | Rows | Description |",
+        "|-------|------|-------------|",
+    ]
     for t in tables:
         try:
             c = summary_con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
-            d = {"raw_pses": "Full ingested dataset", "theme_map": "Question-theme lookup", 
-                 "indicator_map": "Theme reference", "pses_wog": "WOG spine", 
-                 "pses_analysis": "Primary analytical table"}
-            mo.md(f"| `{t}` | {c:,} | {d.get(t, t)} |")
+            _lines.append(f"| `{t}` | {c:,} | {d.get(t, t)} |")
         except Exception:
-            mo.md(f"| `{t}` | N/A | Not yet created |")
+            _lines.append(f"| `{t}` | N/A | Not yet created |")
     summary_con.close()
     if rundb_button.value:
-        mo.md("\n**Pipeline complete!** All tables created successfully.")
+        _lines.append("\n**Pipeline complete!** All tables created successfully.")
+    mo.md("\n".join(_lines))
     return
 
 
