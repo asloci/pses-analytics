@@ -803,7 +803,6 @@ def _(con, no_db_msg):
     overall_delta_df = pl.DataFrame()
     heat_df = pl.DataFrame()
     sub_delta_df = pl.DataFrame()
-    scatter_df = pl.DataFrame()
     years = []
     try:
         overall_df = con.execute(
@@ -855,16 +854,12 @@ def _(con, no_db_msg):
         ORDER BY INDICATORID, SUBINDICATORID, transition
         """).pl()
 
-        # Thesis scatter: each point = (sub-theme delta, overall delta) for a transition
-        scatter_df = sub_delta_df.join(overall_delta_df, on="transition")
-
     if not survey_ready:
         no_db_msg
     return (
         heat_df,
         overall_delta_df,
         overall_df,
-        scatter_df,
         sub_delta_df,
         survey_ready,
         years,
@@ -1042,113 +1037,56 @@ def _(mo, no_db_msg, px, sub_delta_df, survey_ready):
 
 
 @app.cell(hide_code=True)
-def _(go, mo, no_db_msg, px, scatter_df, survey_ready):
-    # The thesis scatter: does a sub-theme that moves track the whole-of-government mean?
-    # x = sub-theme YoY delta, y = overall YoY delta (same transition).
-    # Points on the y=x diagonal track overall; points far from it lead or lag.
+def _(mo, no_db_msg, overall_delta_df, sub_delta_df, survey_ready):
+    # Narrative read off the sub-theme delta bar chart. Two sub-themes carry the story:
+    # "Physical environment and equipment" (the COVID remote/return shock) and
+    # "Senior management" (the lever consistent across all survey years).
     if not survey_ready:
         no_db_msg
     else:
-        _theme_names = (
-            scatter_df.unique("INDICATORID")["INDICATORENG"].to_list()
-        )
-        _palette = px.colors.qualitative.Set2
-        _theme_color = {t: _palette[i % len(_palette)] for i, t in enumerate(_theme_names)}
-        _fig = px.scatter(
-            scatter_df,
-            x="delta",
-            y="overall_delta",
-            color="INDICATORENG",
-            color_discrete_map=_theme_color,
-            category_orders={"INDICATORENG": _theme_names},
-            hover_data=["SUBINDICATORENG", "transition"],
-            labels={
-                "delta": "Sub-theme change (pts)",
-                "overall_delta": "Overall change (pts)",
-                "INDICATORENG": "Theme",
-            },
-            title="Sub-theme change vs. overall change (3 transitions \u00d7 18 sub-themes)",
-        )
-        _lim = (
-            max(
-                abs(scatter_df["delta"].max()),
-                abs(scatter_df["delta"].min()),
-                abs(scatter_df["overall_delta"].max()),
-                abs(scatter_df["overall_delta"].min()),
+        def _delta_of(sub, trans):
+            _row = sub_delta_df.filter(
+                (sub_delta_df["SUBINDICATORENG"] == sub)
+                & (sub_delta_df["transition"] == trans)
             )
-            * 1.15
-        )
-        _fig.add_trace(
-            go.Scatter(
-                x=[-_lim, _lim],
-                y=[-_lim, _lim],
-                mode="lines",
-                line=dict(dash="dash", color="#999", width=1),
-                name="y = x",
-                showlegend=False,
-            )
-        )
-        _fig.update_layout(
-            template="plotly_white",
-            height=480,
-            xaxis=dict(range=[-_lim, _lim]),
-            yaxis=dict(range=[-_lim, _lim]),
-            legend=dict(orientation="h", y=-0.2),
-        )
-    mo.ui.plotly(_fig)
-    return
+            return float(_row["delta"][0]) if _row.height else float("nan")
 
-
-@app.cell(hide_code=True)
-def _(mo, no_db_msg, scatter_df, survey_ready):
-    # Narrative summary: a quick data scan (not a live template) of where each
-    # theme's sub-themes sit relative to the y=x diagonal in the scatter above.
-    if not survey_ready:
-        no_db_msg
-    else:
-        # Sensitivity (beta) of each sub-theme to the overall mean: sum(sub*overall)/sum(overall^2).
-        # The denominator is identical for every sub-theme (same 3 overall deltas), so we
-        # compute it once and group in pure Python over the polars frame's columns.
-        _subs = scatter_df["SUBINDICATORENG"].to_list()
-        _themes_col = scatter_df["INDICATORENG"].to_list()
-        _deltas = scatter_df["delta"].to_list()
-        _od = scatter_df["overall_delta"].to_list()
-        _den = sum(o * o for o in _od)
-        _by_sub = {}
-        for _i, _s in enumerate(_subs):
-            _g = _by_sub.setdefault(_s, {"theme": _themes_col[_i], "num": 0.0})
-            _g["num"] += _deltas[_i] * _od[_i]
-        _betas = [(_g["theme"], _s, _g["num"] / _den) for _s, _g in _by_sub.items()]
-        _betas.sort(key=lambda _b: -_b[2])
-        _top = _betas[0]
-        _bottom = _betas[-1]
+        _pe = "Physical environment and equipment"
+        _sm = "Senior management"
+        _trans = overall_delta_df["transition"].to_list()
+        _pe_d = [_delta_of(_pe, _t) for _t in _trans]
+        _sm_d = [_delta_of(_sm, _t) for _t in _trans]
+        _ov_d = [float(_v) for _v in overall_delta_df["overall_delta"].to_list()]
+        _pe_reversal = _pe_d[-1] - _pe_d[-2]
 
     mo.md(
-            f"""
-        ### What the scatter shows
+        f"""
+        ### What the bar chart shows
 
-        The dashed **y = x** line marks sub-themes that move one-for-one with the
-        whole-of-government mean. Points hugging the diagonal *track* overall; points
-        far from it *lead* (amplify) or *lag* (dampen) the overall swing.
+        Read the sub-theme year-over-year change chart above as the story of two
+        sub-themes.
 
-        **Leadership is the most internally polarized theme.** Its two sub-themes sit at
-        opposite ends of the sensitivity spectrum:
+        **Physical environment and equipment is the largest single swing in the
+        dataset.** It was flat in 2019\u21922020 ({_pe_d[0]:+.1f}), then *rose* during
+        2020\u21922022 ({_pe_d[1]:+.1f}) \u2014 the remote-work period, when the "physical
+        environment" was the home \u2014 and collapsed in 2022\u21922024 ({_pe_d[2]:+.1f}) as
+        return-to-office and hybrid mandates rolled back. That {_pe_reversal:+.1f}-point
+        reversal between the two transitions is the largest of any sub-theme, and it is
+        the primary cause of the difference between the 2020\u21922022 and 2022\u21922024
+        transitions: the COVID arc, in a single indicator.
 
-        - **{_top[1]}** ({_top[0]}) is the **highest-sensitivity** sub-theme
-          (\u03b2 \u2248 {_top[2]:.2f}): it rose most in the 2019\u21922020 rebound and fell
-          most in the 2022\u21922024 decline \u2014 a leading lever for the whole-of-government mean.
-        - **{_bottom[1]}** ({_bottom[0]}) is the **lowest-sensitivity** sub-theme
-          (\u03b2 \u2248 {_bottom[2]:.2f}): it barely moved in either direction \u2014 a stabilizer.
-
-        The remaining themes cluster near the diagonal (Workforce, Workplace) or sit just
-        below it (Workplace well-being), meaning they track the overall mean with modest
-        amplification. So when the whole-of-government score moves, **Senior management
-        moves first and farthest** \u2014 the case for Leadership as the leading lever rests on
-        that single high-beta sub-theme, not the whole theme.
+        **Set that category aside, and Senior management is the lever that is
+        consistent across all survey years.** It moves in the same direction as the
+        whole-of-government mean in every transition \u2014 up in the 2019\u21922020 rebound
+        ({_sm_d[0]:+.1f} vs. overall {_ov_d[0]:+.1f}), down in 2020\u21922022 ({_sm_d[1]:+.1f}
+        vs. {_ov_d[1]:+.1f}), and down hardest in 2022\u21922024 ({_sm_d[2]:+.1f} vs.
+        {_ov_d[2]:+.1f}) \u2014 and it amplifies each swing. Where Physical environment is a
+        one-off shock, Senior management is the steady lever that tracks and magnifies
+        the overall trend.
 
         > **Caveat:** with only four survey years (three transitions), this is a visual
-        > association argument, not a correlation claim. The pattern is consistent across
-        > all three transitions but n is small.
+        > association argument, not a correlation claim. The patterns are consistent
+        > across all three transitions but n is small.
         """
     )
     return
