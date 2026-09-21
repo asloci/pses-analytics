@@ -28,6 +28,9 @@ pses-analytics/
 │   └── pses-overview.png                # README hero screenshot (rendered from the notebook)
 ├── data/                                # Generated DuckDB database (gitignored)
 │   └── pses.duckdb
+├── sql/                                # SQL templates (single source of truth for exec + display)
+│   ├── 01_raw_pses.sql … 10_chi_fetch.sql
+│   └── sample_pses_wog.sql
 ├── pyproject.toml                       # Dependencies (uv-managed)
 ├── uv.lock
 └── README.md
@@ -81,6 +84,8 @@ Builds all analytical tables from the source CSVs:
 5. **Validation** — summarizes all tables created
 
 **Output:** `data/pses.duckdb` with 10 tables.
+
+Each transformation step reads its SQL from a `.sql` template in `sql/` and resolves `{token}` placeholders with `str.format()`, so the SQL shown in the notebook's display cells is exactly the SQL that executes — one source of truth per query.
 
 ### `02_exploration.py` — interactive analysis
 
