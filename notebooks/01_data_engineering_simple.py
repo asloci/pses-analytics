@@ -323,7 +323,7 @@ def _(Path, con, int_exprs, mo, no_db_msg, rundb_button, score5_expr):
 
 
 @app.cell
-def _(Path, FSQ, con, mo, no_db_msg, rundb_button):
+def _(FSQ, Path, con, mo, no_db_msg, rundb_button):
     _msg = None
     if rundb_button.value:
         con.execute(Path("sql/06_theme_scores.sql").read_text().format(FSQ=FSQ))
@@ -658,7 +658,7 @@ def _(Path, int_exprs, mo, score5_expr):
 
 
 @app.cell(hide_code=True)
-def _(Path, FSQ, mo):
+def _(FSQ, Path, mo):
     mo.md(f"""
     ### Statistical Analysis: Theme Scores
 
@@ -776,10 +776,381 @@ def _(db_path, mo, rundb_button):
 
 
 @app.cell(hide_code=True)
+def _():
+    import plotly.express as px
+    import plotly.graph_objects as go
+
+    return go, px
+
+
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## Survey Results Analysis
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(con, no_db_msg):
+    # Read-only data prep for the Survey Results visuals (polars, no pandas).
+    # "Overall score" = the mean of all sub-theme mean scores in a given year.
+    # All pivoting / lag-deltas are computed in SQL; Python only calls .pl().
+    import polars as pl
+
+    survey_ready = False
+    overall_df = pl.DataFrame()
+    overall_delta_df = pl.DataFrame()
+    heat_df = pl.DataFrame()
+    sub_delta_df = pl.DataFrame()
+    scatter_df = pl.DataFrame()
+    years = []
+    try:
+        overall_df = con.execute(
+            "SELECT SURVEYR, AVG(mean_score) AS overall "
+            "FROM theme_scores GROUP BY SURVEYR ORDER BY SURVEYR"
+        ).pl()
+        if overall_df.height >= 2:
+            survey_ready = True
+    except Exception:
+        survey_ready = False
+
+    if survey_ready:
+        years = overall_df["SURVEYR"].to_list()
+
+        # Overall year-over-year deltas (LAG over the 4 yearly means)
+        overall_delta_df = con.execute("""
+        WITH t AS (
+          SELECT SURVEYR, AVG(mean_score) AS overall,
+                 LAG(SURVEYR) OVER (ORDER BY SURVEYR) AS prev_year,
+                 LAG(AVG(mean_score)) OVER (ORDER BY SURVEYR) AS prev_overall
+          FROM theme_scores GROUP BY SURVEYR
+        )
+        SELECT CONCAT(CAST(prev_year AS VARCHAR), '\u2192', CAST(SURVEYR AS VARCHAR)) AS transition,
+               overall - prev_overall AS overall_delta
+        FROM t WHERE prev_year IS NOT NULL ORDER BY SURVEYR
+        """).pl()
+
+        # Sub-theme x year matrix (one row per sub-theme, grouped by theme) via DuckDB PIVOT
+        heat_df = con.execute("""
+        PIVOT (
+          SELECT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG, SURVEYR, mean_score
+          FROM theme_scores
+        ) ON SURVEYR USING AVG(mean_score)
+        ORDER BY INDICATORID, SUBINDICATORID
+        """).pl()
+
+        # Per-sub-theme year-over-year deltas (long) via LAG partitioned by sub-theme
+        sub_delta_df = con.execute("""
+        WITH t AS (
+          SELECT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG, SURVEYR, mean_score,
+                 LAG(SURVEYR) OVER (PARTITION BY SUBINDICATORID ORDER BY SURVEYR) AS prev_year,
+                 LAG(mean_score) OVER (PARTITION BY SUBINDICATORID ORDER BY SURVEYR) AS prev_score
+          FROM theme_scores
+        )
+        SELECT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG,
+               CONCAT(CAST(prev_year AS VARCHAR), '\u2192', CAST(SURVEYR AS VARCHAR)) AS transition,
+               mean_score - prev_score AS delta
+        FROM t WHERE prev_year IS NOT NULL
+        ORDER BY INDICATORID, SUBINDICATORID, transition
+        """).pl()
+
+        # Thesis scatter: each point = (sub-theme delta, overall delta) for a transition
+        scatter_df = sub_delta_df.join(overall_delta_df, on="transition")
+
+    if not survey_ready:
+        no_db_msg
+    return (
+        heat_df,
+        overall_delta_df,
+        overall_df,
+        scatter_df,
+        sub_delta_df,
+        survey_ready,
+        years,
+    )
+
+
+@app.cell(hide_code=True)
+def _(mo, no_db_msg, overall_df, px, survey_ready):
+    if not survey_ready:
+        no_db_msg
+    else:
+        _fig = px.line(
+            overall_df,
+            x="SURVEYR",
+            y="overall",
+            markers=True,
+            title="Overall mean score across survey years (mean of all sub-theme means)",
+            labels={"SURVEYR": "Survey year", "overall": "Overall mean SCORE100"},
+        )
+        _fig.update_traces(line_color="#444", marker_size=9)
+        _fig.update_layout(template="plotly_white", height=350)
+    mo.ui.plotly(_fig)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, no_db_msg, overall_delta_df, px, survey_ready):
+    if not survey_ready:
+        no_db_msg
+    else:
+        _fig = px.bar(
+            overall_delta_df,
+            x="transition",
+            y="overall_delta",
+            title="Overall year-over-year change in mean score",
+            labels={"transition": "Transition", "overall_delta": "Change (pts)"},
+            color="overall_delta",
+            color_continuous_scale=[(0, "#d62728"), (0.5, "#f0f0f0"), (1, "#2ca02c")],
+        )
+        _fig.update_layout(template="plotly_white", height=350, coloraxis_showscale=False)
+    mo.ui.plotly(_fig)
+    return
+
+
+@app.cell(hide_code=True)
+def _(go, heat_df, mo, no_db_msg, px, survey_ready, years):
+    if not survey_ready:
+        no_db_msg
+    else:
+        # Color encodes SCORE100 (Viridis); theme grouping shown via row banding
+        # and a theme label strip on the left margin.
+        _themes = px.colors.qualitative.Set2
+        _theme_names = heat_df.unique("INDICATORID")["INDICATORENG"].to_list()
+        _theme_color = {t: _themes[i % len(_themes)] for i, t in enumerate(_theme_names)}
+
+        _z = heat_df.select([str(_y) for _y in years]).to_numpy()
+        _ylabels = [
+            f"{t} \u00b7 {s}"
+            for t, s in zip(heat_df["INDICATORENG"].to_list(), heat_df["SUBINDICATORENG"].to_list())
+        ]
+        _fig = go.Figure(
+            data=go.Heatmap(
+                z=_z,
+                x=[str(y) for y in years],
+                y=_ylabels,
+                colorscale="Viridis",
+                zmin=_z.min(),
+                zmax=_z.max(),
+                text=_z.round(1),
+                texttemplate="%{text}",
+                hovertemplate="%{y}<br>%{x}: %{z:.1f}<extra></extra>",
+            )
+        )
+
+        # Row banding: a faint colored rect per theme + white separator lines
+        _n = heat_df.height
+        _theme_starts = []
+        _prev = None
+        for _i, _t in enumerate(heat_df["INDICATORENG"].to_list()):
+            if _t != _prev:
+                _theme_starts.append((_i, _t))
+                _prev = _t
+        _shapes = []
+        for _idx, (_i, _t) in enumerate(_theme_starts):
+            _shapes.append(
+                dict(
+                    type="line",
+                    x0=-0.5,
+                    x1=len(years) - 0.5,
+                    y0=_i - 0.5,
+                    y1=_i - 0.5,
+                    line=dict(color="white", width=2),
+                )
+            )
+            _y1 = (
+                _theme_starts[_idx + 1][0] - 0.5
+                if _idx + 1 < len(_theme_starts)
+                else _n - 0.5
+            )
+            _shapes.append(
+                dict(
+                    type="rect",
+                    x0=-0.5,
+                    x1=len(years) - 0.5,
+                    y0=_i - 0.5,
+                    y1=_y1,
+                    layer="below",
+                    fillcolor=_theme_color.get(_t, "#cccccc"),
+                    opacity=0.10,
+                    line_width=0,
+                )
+            )
+        _anns = [
+            dict(
+                x=-0.6,
+                y=_i + (_next_i - _i) / 2 - 0.5,
+                text=_t,
+                showarrow=False,
+                xanchor="right",
+                font=dict(size=11, color=_theme_color.get(_t, "#444")),
+            )
+            for (_i, _t), (_next_i, _) in zip(
+                _theme_starts, _theme_starts[1:] + [(_n, None)]
+            )
+        ]
+        _fig.update_layout(
+            title="Sub-theme mean SCORE100 by year (rows grouped by theme)",
+            xaxis_title="Survey year",
+            yaxis_title="",
+            template="plotly_white",
+            height=640,
+            yaxis=dict(autorange="reversed", tickfont=dict(size=10)),
+            margin=dict(l=190),
+            shapes=_shapes,
+            annotations=_anns,
+        )
+    mo.ui.plotly(_fig)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, no_db_msg, px, sub_delta_df, survey_ready):
+    if not survey_ready:
+        no_db_msg
+    else:
+        _theme_names = (
+            sub_delta_df.unique("INDICATORID")["INDICATORENG"].to_list()
+        )
+        _palette = px.colors.qualitative.Set2
+        _theme_color = {t: _palette[i % len(_palette)] for i, t in enumerate(_theme_names)}
+        _fig = px.bar(
+            sub_delta_df,
+            x="delta",
+            y="SUBINDICATORENG",
+            color="INDICATORENG",
+            facet_col="transition",
+            orientation="h",
+            color_discrete_map=_theme_color,
+            category_orders={"INDICATORENG": _theme_names},
+            title="Sub-theme year-over-year change, by transition (colored by theme)",
+            labels={
+                "delta": "Change (pts)",
+                "SUBINDICATORENG": "Sub-theme",
+                "INDICATORENG": "Theme",
+            },
+        )
+        _fig.update_layout(
+            template="plotly_white",
+            height=640,
+            barmode="relative",
+            legend=dict(orientation="h", y=-0.12),
+        )
+    mo.ui.plotly(_fig)
+    return
+
+
+@app.cell(hide_code=True)
+def _(go, mo, no_db_msg, px, scatter_df, survey_ready):
+    # The thesis scatter: does a sub-theme that moves track the whole-of-government mean?
+    # x = sub-theme YoY delta, y = overall YoY delta (same transition).
+    # Points on the y=x diagonal track overall; points far from it lead or lag.
+    if not survey_ready:
+        no_db_msg
+    else:
+        _theme_names = (
+            scatter_df.unique("INDICATORID")["INDICATORENG"].to_list()
+        )
+        _palette = px.colors.qualitative.Set2
+        _theme_color = {t: _palette[i % len(_palette)] for i, t in enumerate(_theme_names)}
+        _fig = px.scatter(
+            scatter_df,
+            x="delta",
+            y="overall_delta",
+            color="INDICATORENG",
+            color_discrete_map=_theme_color,
+            category_orders={"INDICATORENG": _theme_names},
+            hover_data=["SUBINDICATORENG", "transition"],
+            labels={
+                "delta": "Sub-theme change (pts)",
+                "overall_delta": "Overall change (pts)",
+                "INDICATORENG": "Theme",
+            },
+            title="Sub-theme change vs. overall change (3 transitions \u00d7 18 sub-themes)",
+        )
+        _lim = (
+            max(
+                abs(scatter_df["delta"].max()),
+                abs(scatter_df["delta"].min()),
+                abs(scatter_df["overall_delta"].max()),
+                abs(scatter_df["overall_delta"].min()),
+            )
+            * 1.15
+        )
+        _fig.add_trace(
+            go.Scatter(
+                x=[-_lim, _lim],
+                y=[-_lim, _lim],
+                mode="lines",
+                line=dict(dash="dash", color="#999", width=1),
+                name="y = x",
+                showlegend=False,
+            )
+        )
+        _fig.update_layout(
+            template="plotly_white",
+            height=480,
+            xaxis=dict(range=[-_lim, _lim]),
+            yaxis=dict(range=[-_lim, _lim]),
+            legend=dict(orientation="h", y=-0.2),
+        )
+    mo.ui.plotly(_fig)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, no_db_msg, scatter_df, survey_ready):
+    # Narrative summary: a quick data scan (not a live template) of where each
+    # theme's sub-themes sit relative to the y=x diagonal in the scatter above.
+    if not survey_ready:
+        no_db_msg
+    else:
+        # Sensitivity (beta) of each sub-theme to the overall mean: sum(sub*overall)/sum(overall^2).
+        # The denominator is identical for every sub-theme (same 3 overall deltas), so we
+        # compute it once and group in pure Python over the polars frame's columns.
+        _subs = scatter_df["SUBINDICATORENG"].to_list()
+        _themes_col = scatter_df["INDICATORENG"].to_list()
+        _deltas = scatter_df["delta"].to_list()
+        _od = scatter_df["overall_delta"].to_list()
+        _den = sum(o * o for o in _od)
+        _by_sub = {}
+        for _i, _s in enumerate(_subs):
+            _g = _by_sub.setdefault(_s, {"theme": _themes_col[_i], "num": 0.0})
+            _g["num"] += _deltas[_i] * _od[_i]
+        _betas = [(_g["theme"], _s, _g["num"] / _den) for _s, _g in _by_sub.items()]
+        _betas.sort(key=lambda _b: -_b[2])
+        _top = _betas[0]
+        _bottom = _betas[-1]
+
+    mo.md(
+            f"""
+        ### What the scatter shows
+
+        The dashed **y = x** line marks sub-themes that move one-for-one with the
+        whole-of-government mean. Points hugging the diagonal *track* overall; points
+        far from it *lead* (amplify) or *lag* (dampen) the overall swing.
+
+        **Leadership is the most internally polarized theme.** Its two sub-themes sit at
+        opposite ends of the sensitivity spectrum:
+
+        - **{_top[1]}** ({_top[0]}) is the **highest-sensitivity** sub-theme
+          (\u03b2 \u2248 {_top[2]:.2f}): it rose most in the 2019\u21922020 rebound and fell
+          most in the 2022\u21922024 decline \u2014 a leading lever for the whole-of-government mean.
+        - **{_bottom[1]}** ({_bottom[0]}) is the **lowest-sensitivity** sub-theme
+          (\u03b2 \u2248 {_bottom[2]:.2f}): it barely moved in either direction \u2014 a stabilizer.
+
+        The remaining themes cluster near the diagonal (Workforce, Workplace) or sit just
+        below it (Workplace well-being), meaning they track the overall mean with modest
+        amplification. So when the whole-of-government score moves, **Senior management
+        moves first and farthest** \u2014 the case for Leadership as the leading lever rests on
+        that single high-beta sub-theme, not the whole theme.
+
+        > **Caveat:** with only four survey years (three transitions), this is a visual
+        > association argument, not a correlation claim. The pattern is consistent across
+        > all three transitions but n is small.
+        """
+    )
     return
 
 
