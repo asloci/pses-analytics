@@ -163,13 +163,12 @@ def _(Path, con, mo, no_db_msg):
 
 
 @app.cell
-def _(db_path, duckdb, no_db_msg, rundb_button):
+def _(Path, db_path, duckdb, no_db_msg, rundb_button):
     CSV_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv"
     RAW_TABLE = "raw_pses"
     if rundb_button.value:
         pipe_con_1 = duckdb.connect(db_path)
-        pipe_con_1.execute(f"DROP TABLE IF EXISTS {RAW_TABLE}")
-        pipe_con_1.execute(f"CREATE TABLE {RAW_TABLE} AS SELECT * FROM read_csv_auto('{CSV_URL}', header=true, ignore_errors=true)")
+        pipe_con_1.execute(Path("sql/01_raw_pses.sql").read_text())
         row_count_1 = pipe_con_1.execute(f"SELECT COUNT(*) FROM {RAW_TABLE}").fetchone()[0]
         pipe_con_1.close()
         msg_1 = f"**Ingestion Complete**: {row_count_1:,} rows loaded into `{RAW_TABLE}`"
@@ -266,19 +265,13 @@ def _(
 
 
 @app.cell
-def _(csv_path_1, db_path, duckdb, mo, rundb_button):
+def _(Path, csv_path_1, db_path, duckdb, mo, rundb_button):
     _msg = None
     if rundb_button.value and csv_path_1:
         pipe_con_3 = duckdb.connect(db_path)
-        pipe_con_3.execute("""
-            CREATE OR REPLACE TABLE theme_map AS
-            SELECT DISTINCT ON (QUESTION) QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-            FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY QUESTION""", [csv_path_1])
+        pipe_con_3.execute(Path("sql/02_theme_map.sql").read_text(), [csv_path_1])
         n_theme = pipe_con_3.execute("SELECT COUNT(*) FROM theme_map").fetchone()[0]
-        pipe_con_3.execute("""
-            CREATE OR REPLACE TABLE indicator_map AS
-            SELECT DISTINCT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-            FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY INDICATORID, SUBINDICATORID""", [csv_path_1])
+        pipe_con_3.execute(Path("sql/03_indicator_map.sql").read_text(), [csv_path_1])
         n_indicator = pipe_con_3.execute("SELECT COUNT(*) FROM indicator_map").fetchone()[0]
         import os as _os
         _os.unlink(csv_path_1)
@@ -589,42 +582,39 @@ def _(mo):
     mo.md("""
     ## Pipeline Explanation
 
+    This section documents the SQL methodology used to build the analytical tables.
     Python and SQL are used to ingest and transform the survey data into an analytical database.
+    See the [DuckDB SQL documentation](https://duckdb.org/docs/sql/) for function reference,
+    including `read_csv_auto()` and `?` parameter binding used below.
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     ### Ingestion: Raw Data
 
     Loads the main PSES dataset from CSV into DuckDB.
 
     ```sql
-    DROP TABLE IF EXISTS raw_pses
-    CREATE TABLE raw_pses AS SELECT *
-    FROM read_csv_auto('https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv', header=true, ignore_errors=true)
+    {Path("sql/01_raw_pses.sql").read_text()}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     ### Ingestion: Theme Taxonomy
 
     Loads the theme/indicator taxonomy from Subset 1 CSV.
 
     ```sql
-    CREATE OR REPLACE TABLE theme_map AS
-    SELECT DISTINCT ON (QUESTION) QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY QUESTION
+    {Path("sql/02_theme_map.sql").read_text()}
 
-    CREATE OR REPLACE TABLE indicator_map AS
-    SELECT DISTINCT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY INDICATORID, SUBINDICATORID
+    {Path("sql/03_indicator_map.sql").read_text()}
     ```
     """)
     return
@@ -677,28 +667,24 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     ### Transformation: Theme Lookup Table
 
     ```sql
-    CREATE OR REPLACE TABLE theme_map AS
-    SELECT DISTINCT ON (QUESTION) QUESTION, TITLE_E, INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY QUESTION
+    {Path("sql/02_theme_map.sql").read_text()}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, mo):
+    mo.md(f"""
     ### Transformation: Indicator Lookup Table
 
     ```sql
-    CREATE OR REPLACE TABLE indicator_map AS
-    SELECT DISTINCT INDICATORID, INDICATORENG, SUBINDICATORID, SUBINDICATORENG
-    FROM read_csv_auto(?, header=true) WHERE LEVEL1ID = '00' AND BYCOND IS NULL ORDER BY INDICATORID, SUBINDICATORID
+    {Path("sql/03_indicator_map.sql").read_text()}
     ```
     """)
     return
