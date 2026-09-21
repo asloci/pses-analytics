@@ -25,3 +25,6 @@ docs/
 archive/
 notebooks/*_backup*.py
 notebooks/*.backup
+
+# Marimo session state (local only, not pushed)
+notebooks/__marimo__/session/
