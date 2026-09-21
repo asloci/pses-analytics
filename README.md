@@ -2,7 +2,7 @@
 
 A reproducible data-engineering and analysis workbench for the **Public Service Employee Survey (PSES)** — the Government of Canada's federal public-service employee survey. The pipeline ingests the published PSES results, maps every question onto a theme/sub-theme taxonomy, and builds a set of analytical tables in DuckDB for longitudinal analysis.
 
-> **Status:** work in progress. The notebooks are the starting point for ongoing feature work; the table-building pipeline is functional and reproducible, but the exploration notebook is still under active development.
+> **Status:** work in progress. The single notebook is the starting point for ongoing feature work; the table-building pipeline is functional and reproducible, with a Survey Results Analysis section for visualization.
 
 ![PSES Analytics notebook overview](assets/pses-overview.png)
 
@@ -14,17 +14,15 @@ The raw PSES release contains **12.2 million response records** — one row per 
 
 - **DuckDB** — analytical query engine; all tables live in a single `data/pses.duckdb` file
 - **Polars** — DataFrame operations
-- **marimo** — interactive notebooks (the pipeline and exploration UIs are marimo apps)
-- **Altair** — visualization (notebook 02)
-- **Plotly** — visualization (notebook 01 Survey Results section)
+- **marimo** — interactive notebooks (the pipeline and analysis UI is a marimo app)
+- **Plotly** — visualization (Survey Results Analysis section)
 
 ## Project structure
 
 ```
 pses-analytics/
 ├── notebooks/
-│   ├── 01_data_engineering_simple.py   # Canonical pipeline: ingestion → analytical tables
-│   └── 02_exploration.py                # Interactive analysis & visualization (in progress)
+│   └── pses_analytics.py                 # Canonical pipeline: ingestion → analytical tables → visuals
 ├── assets/
 │   └── pses-overview.png                # README hero screenshot (rendered from the notebook)
 ├── data/                                # Generated DuckDB database (gitignored)
@@ -53,7 +51,7 @@ uv sync
 ### 2. Build the analytical database
 
 ```bash
-uv run marimo edit notebooks/01_data_engineering_simple.py
+uv run marimo edit notebooks/pses_analytics.py
 ```
 
 Run this command **from the repository root** so the notebook resolves `data/pses.duckdb` correctly. In the notebook, click the **"Generate the PSES Analytical Database"** button to:
@@ -64,17 +62,9 @@ Run this command **from the repository root** so the notebook resolves `data/pse
 
 The first run downloads a ~12M-row CSV and builds the database from scratch (a few minutes). If `data/pses.duckdb` already exists, the button rebuilds it for full reproducibility; if you do not click it, the notebook opens the existing database to display samples, statistics, and the Survey Results Analysis visuals — all of which render automatically once the database file is present, no button click required.
 
-### 3. Explore the data
-
-```bash
-uv run marimo edit notebooks/02_exploration.py
-```
-
-This notebook opens `data/pses.duckdb` in **read-only** mode and provides theme/year selectors, trend charts, a year-over-year change heatmap, a chi-square significance table, question-level drill-down, and auto-generated narrative summaries. (This notebook is under active development and references the canonical pipeline notebook.)
-
 ## Notebook architecture
 
-### `01_data_engineering_simple.py` — data pipeline
+### `pses_analytics.py` — data pipeline
 
 Builds all analytical tables from the source CSVs:
 
@@ -88,10 +78,6 @@ Builds all analytical tables from the source CSVs:
 **Output:** `data/pses.duckdb` with 10 tables.
 
 Each transformation step reads its SQL from a `.sql` template in `sql/` and resolves `{token}` placeholders with `str.format()`, so the SQL shown in the notebook's display cells is exactly the SQL that executes — one source of truth per query.
-
-### `02_exploration.py` — interactive analysis
-
-Read-only exploration of the analytical tables: theme selector (6 themes), year filter (2019/2020/2022/2024), trend line charts, year-over-year heatmap, chi-square 2019-vs-2024 table, question drill-down, and leadership narrative summary.
 
 ## DuckDB tables
 
@@ -142,7 +128,7 @@ The hero image is rendered from the canonical notebook with marimo's thumbnail e
 ```bash
 uv sync --group docs
 uv run playwright install chromium
-uv run marimo export thumbnail --execute notebooks/01_data_engineering_simple.py \
+uv run marimo export thumbnail --execute notebooks/pses_analytics.py \
   --output assets/pses-overview.png --width 1280 --height 860 --scale 2 --overwrite
 ```
 
