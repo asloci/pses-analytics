@@ -164,7 +164,6 @@ def _(Path, con, mo, no_db_msg):
 
 @app.cell
 def _(Path, db_path, duckdb, no_db_msg, rundb_button):
-    CSV_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv"
     RAW_TABLE = "raw_pses"
     if rundb_button.value:
         pipe_con_1 = duckdb.connect(db_path)
@@ -233,30 +232,27 @@ def _():
 
 
 @app.cell
+def _(INT_COLS, make_double_expr, make_int_expr):
+    int_exprs = ", ".join(make_int_expr(c) for c in INT_COLS)
+    score5_expr = make_double_expr("SCORE5")
+    return int_exprs, score5_expr
+
+
+@app.cell
 def _(
-    INT_COLS,
+    Path,
     RAW_TABLE,
     db_path,
     duckdb,
-    make_double_expr,
-    make_int_expr,
+    int_exprs,
     mo,
     rundb_button,
+    score5_expr,
 ):
     _msg = None
     if rundb_button.value:
         pipe_con_2 = duckdb.connect(db_path)
-        int_exprs = ", ".join(make_int_expr(c) for c in INT_COLS)
-        score5_expr = make_double_expr("SCORE5")
-        shared_select = f"CAST(SURVEYR AS INTEGER) AS SURVEYR, QUESTION, {int_exprs}, {score5_expr}"
-        pipe_con_2.execute(f"""
-            CREATE OR REPLACE TABLE pses_wog AS
-            WITH base AS (SELECT {shared_select}, SCORE100 FROM {RAW_TABLE} WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL),
-            stable_questions AS (SELECT QUESTION FROM {RAW_TABLE} WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL GROUP BY QUESTION HAVING COUNT(DISTINCT SURVEYR) = (SELECT COUNT(DISTINCT SURVEYR) FROM {RAW_TABLE}))
-            SELECT b.SURVEYR, b.QUESTION, {int_exprs}, b.SCORE5,
-                NULLIF(CAST(b.SCORE100 AS INTEGER), 9999) IS NOT NULL AS is_scored,
-                (b.QUESTION IN (SELECT QUESTION FROM stable_questions)) AS is_stable FROM base b
-        """)
+        pipe_con_2.execute(Path("sql/04_pses_wog.sql").read_text().format(int_exprs=int_exprs, score5_expr=score5_expr, RAW_TABLE=RAW_TABLE))
         wog_total = pipe_con_2.execute("SELECT COUNT(*) FROM pses_wog").fetchone()[0]
         pipe_con_2.close()
         _msg = mo.md(f"**pses_wog created**: {wog_total:,} rows")
@@ -308,25 +304,10 @@ def _():
 
 
 @app.cell
-def _(INT_COLS, con, make_double_expr, make_int_expr, mo, no_db_msg, rundb_button):
+def _(Path, con, int_exprs, mo, no_db_msg, rundb_button, score5_expr):
     _msg = None
     if rundb_button.value:
-        int_exprs_sliced = ", ".join(make_int_expr(c) for c in INT_COLS)
-        score5_expr_sliced = make_double_expr("SCORE5")
-
-        con.execute(f"""
-            CREATE OR REPLACE TABLE pses_sliced AS
-            SELECT
-                CAST(SURVEYR AS INTEGER) AS SURVEYR,
-                QUESTION,
-                BYCOND,
-                DEMCODE,
-                {int_exprs_sliced},
-                {score5_expr_sliced}
-            FROM raw_pses
-            WHERE BYCOND IS NOT NULL
-              AND LEVEL1ID = 0
-        """)
+        con.execute(Path("sql/07_pses_sliced.sql").read_text().format(int_exprs=int_exprs, score5_expr=score5_expr))
 
         sliced_total = con.execute("SELECT COUNT(*) FROM pses_sliced").fetchone()[0]
         _msg = mo.md(f"**✓ pses_sliced created**: {sliced_total:,} rows")
@@ -342,32 +323,10 @@ def _(INT_COLS, con, make_double_expr, make_int_expr, mo, no_db_msg, rundb_butto
 
 
 @app.cell
-def _(FSQ, con, mo, no_db_msg, rundb_button):
+def _(Path, FSQ, con, mo, no_db_msg, rundb_button):
     _msg = None
     if rundb_button.value:
-        con.execute(f"""
-            CREATE OR REPLACE TABLE theme_scores AS
-            SELECT
-                SURVEYR,
-                INDICATORID,
-                INDICATORENG,
-                SUBINDICATORID,
-                SUBINDICATORENG,
-                AVG(SCORE100) AS mean_score
-            FROM pses_analysis
-            WHERE QUESTION IN ({FSQ})
-              AND QUESTION NOT LIKE 'Q73%'
-            GROUP BY
-                SURVEYR,
-                INDICATORID,
-                INDICATORENG,
-                SUBINDICATORID,
-                SUBINDICATORENG
-            ORDER BY
-                INDICATORID,
-                SUBINDICATORID,
-                SURVEYR
-        """)
+        con.execute(Path("sql/06_theme_scores.sql").read_text().format(FSQ=FSQ))
 
         n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
         _msg = mo.md(f"**✓ theme_scores created**: {n_theme_scores} rows")
@@ -621,17 +580,14 @@ def _(Path, mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(Path, RAW_TABLE, int_exprs, mo, score5_expr):
+    mo.md(f"""
     ### Transformation: Whole-of-Government Spine (Legacyu)
 
     A combination of Python and SQL is used for this transformation step. A list is created in Python and two helper functions that do the `NULLIF CAST` to a `cols` variable for `9999` and `9999.0`. These are applied to build and execute the SQL that creates the `pses_wog` table.
 
     ```sql
-    CREATE OR REPLACE TABLE pses_wog AS
-    WITH base AS (SELECT CAST(SURVEYR AS INTEGER) AS SURVEYR, QUESTION, NULLIF(CAST(SCORE100 AS INTEGER), 9999) AS SCORE100, NULLIF(CAST(ANSCOUNT AS INTEGER), 9999) AS ANSCOUNT, NULLIF(CAST(POSITIVE AS INTEGER), 9999) AS POSITIVE, NULLIF(CAST(NEUTRAL AS INTEGER), 9999) AS NEUTRAL, NULLIF(CAST(NEGATIVE AS INTEGER), 9999) AS NEGATIVE, NULLIF(CAST(AGREE AS INTEGER), 9999) AS AGREE, NULLIF(CAST(answer1 AS INTEGER), 9999) AS answer1, NULLIF(CAST(answer2 AS INTEGER), 9999) AS answer2, NULLIF(CAST(answer3 AS INTEGER), 9999) AS answer3, NULLIF(CAST(answer4 AS INTEGER), 9999) AS answer4, NULLIF(CAST(answer5 AS INTEGER), 9999) AS answer5, NULLIF(CAST(answer6 AS INTEGER), 9999) AS answer6, NULLIF(CAST(answer7 AS INTEGER), 9999) AS answer7, NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5 FROM raw_pses WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL),
-    stable_questions AS (SELECT QUESTION FROM raw_pses WHERE LEVEL1ID = 0 AND LEVEL2ID = 0 AND BYCOND IS NULL GROUP BY QUESTION HAVING COUNT(DISTINCT SURVEYR) = (SELECT COUNT(DISTINCT SURVEYR) FROM raw_pses))
-    SELECT b.SURVEYR, b.QUESTION, NULLIF(CAST(SCORE100 AS INTEGER), 9999) AS SCORE100, NULLIF(CAST(ANSCOUNT AS INTEGER), 9999) AS ANSCOUNT, NULLIF(CAST(POSITIVE AS INTEGER), 9999) AS POSITIVE, NULLIF(CAST(NEUTRAL AS INTEGER), 9999) AS NEUTRAL, NULLIF(CAST(NEGATIVE AS INTEGER), 9999) AS NEGATIVE, NULLIF(CAST(AGREE AS INTEGER), 9999) AS AGREE, NULLIF(CAST(answer1 AS INTEGER), 9999) AS answer1, NULLIF(CAST(answer2 AS INTEGER), 9999) AS answer2, NULLIF(CAST(answer3 AS INTEGER), 9999) AS answer3, NULLIF(CAST(answer4 AS INTEGER), 9999) AS answer4, NULLIF(CAST(answer5 AS INTEGER), 9999) AS answer5, NULLIF(CAST(answer6 AS INTEGER), 9999) AS answer6, NULLIF(CAST(answer7 AS INTEGER), 9999) AS answer7, NULLIF(CAST(b.SCORE100 AS INTEGER), 9999) IS NOT NULL AS is_scored, (b.QUESTION IN (SELECT QUESTION FROM stable_questions)) AS is_stable FROM base b
+    {Path("sql/04_pses_wog.sql").read_text().format(int_exprs=int_exprs, score5_expr=score5_expr, RAW_TABLE=RAW_TABLE)}
     ```
     """)
     return
@@ -703,76 +659,28 @@ def _(Path, mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(Path, int_exprs, mo, score5_expr):
+    mo.md(f"""
     ### Transformation: Demographic/Org Slices
 
     Creates a table with demographic and organizational breakdowns (BYCOND IS NOT NULL).
 
     ```sql
-    CREATE OR REPLACE TABLE pses_sliced AS
-    SELECT
-        CAST(SURVEYR AS INTEGER) AS SURVEYR,
-        QUESTION,
-        BYCOND,
-        DEMCODE,
-        NULLIF(CAST(SCORE100 AS INTEGER), 9999) AS SCORE100,
-        NULLIF(CAST(ANSCOUNT AS INTEGER), 9999) AS ANSCOUNT,
-        NULLIF(CAST(POSITIVE AS INTEGER), 9999) AS POSITIVE,
-        NULLIF(CAST(NEUTRAL AS INTEGER), 9999) AS NEUTRAL,
-        NULLIF(CAST(NEGATIVE AS INTEGER), 9999) AS NEGATIVE,
-        NULLIF(CAST(AGREE AS INTEGER), 9999) AS AGREE,
-        NULLIF(CAST(answer1 AS INTEGER), 9999) AS answer1,
-        NULLIF(CAST(answer2 AS INTEGER), 9999) AS answer2,
-        NULLIF(CAST(answer3 AS INTEGER), 9999) AS answer3,
-        NULLIF(CAST(answer4 AS INTEGER), 9999) AS answer4,
-        NULLIF(CAST(answer5 AS INTEGER), 9999) AS answer5,
-        NULLIF(CAST(answer6 AS INTEGER), 9999) AS answer6,
-        NULLIF(CAST(answer7 AS INTEGER), 9999) AS answer7,
-        NULLIF(CAST(SCORE5 AS DOUBLE), 9999.0) AS SCORE5
-    FROM raw_pses
-    WHERE BYCOND IS NOT NULL
-      AND LEVEL1ID = 0
+    {Path("sql/07_pses_sliced.sql").read_text().format(int_exprs=int_exprs, score5_expr=score5_expr)}
     ```
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(Path, FSQ, mo):
+    mo.md(f"""
     ### Statistical Analysis: Theme Scores
 
     Computes mean SCORE100 per subtheme per year for longitudinal analysis.
 
     ```sql
-    CREATE OR REPLACE TABLE theme_scores AS
-    SELECT
-        SURVEYR,
-        INDICATORID,
-        INDICATORENG,
-        SUBINDICATORID,
-        SUBINDICATORENG,
-        AVG(SCORE100) AS mean_score
-    FROM pses_analysis
-    WHERE QUESTION IN (
-        SELECT QUESTION
-        FROM pses_analysis
-        WHERE is_stable = true
-        GROUP BY QUESTION
-        HAVING COUNT(CASE WHEN SCORE100 IS NOT NULL THEN 1 END) = 4
-    )
-      AND QUESTION NOT LIKE 'Q73%'
-    GROUP BY
-        SURVEYR,
-        INDICATORID,
-        INDICATORENG,
-        SUBINDICATORID,
-        SUBINDICATORENG
-    ORDER BY
-        INDICATORID,
-        SUBINDICATORID,
-        SURVEYR
+    {Path("sql/06_theme_scores.sql").read_text().format(FSQ=FSQ)}
     ```
     """)
     return
