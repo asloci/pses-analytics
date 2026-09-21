@@ -66,9 +66,14 @@ def _():
     import os
     from pathlib import Path
 
+    Path("data").mkdir(parents=True, exist_ok=True)
     db_path = str(Path("data") / "pses.duckdb")
     con = duckdb.connect(db_path)
-    return con, db_path, duckdb
+    no_db_msg = (
+        "Database not built yet. Click **Generate the PSES Analytical Database** "
+        "above to download the PSES data and create all analytical tables."
+    )
+    return con, db_path, duckdb, no_db_msg
 
 
 @app.cell
@@ -98,17 +103,20 @@ def _(con):
 
 
 @app.cell
-def _(table_stats, total_elapsed):
+def _(no_db_msg, table_stats, total_elapsed):
     total_ms = total_elapsed * 1000
 
     total_rows = sum(stat["Number_of_rows"] for stat in table_stats)
     num_tables = len(table_stats)
     total_ms = total_elapsed * 1000
 
-    summary = (
-        f"Over **{total_rows:,}** rows counted across **{num_tables}** tables "
-        f"in less than **{total_ms:.1f} ms**."
-    )
+    if num_tables == 0:
+        summary = no_db_msg
+    else:
+        summary = (
+            f"Over **{total_rows:,}** rows counted across **{num_tables}** tables "
+            f"in less than **{total_ms:.1f} ms**."
+        )
 
     # Sort by rows descending for marimo table
     sorted_stats = sorted(table_stats, key=lambda x: x["Number_of_rows"], reverse=True)
@@ -125,7 +133,7 @@ def _(mo, summary):
 
 @app.cell
 def _(mo, sorted_stats):
-    mo.ui.table(data=sorted_stats, label='Query Statistics:')
+    mo.ui.table(data=sorted_stats, label='Query Statistics:') if sorted_stats else None
     return
 
 
@@ -141,18 +149,23 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(con, mo):
-    _df = mo.sql(
-        f"""
-        SELECT * FROM pses_wog LIMIT 50
-        """,
-        engine=con
+def _(con, mo, no_db_msg):
+    _tables = [r[0] for r in con.execute("SHOW TABLES").fetchall()]
+    (
+        mo.sql(
+            f"""
+            SELECT * FROM pses_wog LIMIT 50
+            """,
+            engine=con,
+        )
+        if "pses_wog" in _tables
+        else mo.md(no_db_msg)
     )
     return
 
 
 @app.cell
-def _(db_path, duckdb, rundb_button):
+def _(db_path, duckdb, no_db_msg, rundb_button):
     CSV_URL = "https://www.canada.ca/content/dam/tbs-sct/documents/datasets/ses-2025/main-principal.csv"
     RAW_TABLE = "raw_pses"
     if rundb_button.value:
@@ -169,7 +182,7 @@ def _(db_path, duckdb, rundb_button):
             chk_con_1.close()
             msg_1 = f"**Using existing table**: `{RAW_TABLE}` with {row_count_1:,} rows"
         except Exception:
-            msg_1 = f"*Table `{RAW_TABLE}` not found*"
+            msg_1 = no_db_msg
     return RAW_TABLE, msg_1
 
 
@@ -301,7 +314,7 @@ def _():
 
 
 @app.cell
-def _(INT_COLS, con, make_double_expr, make_int_expr, mo, rundb_button):
+def _(INT_COLS, con, make_double_expr, make_int_expr, mo, no_db_msg, rundb_button):
     if rundb_button.value:
         int_exprs_sliced = ", ".join(make_int_expr(c) for c in INT_COLS)
         score5_expr_sliced = make_double_expr("SCORE5")
@@ -328,12 +341,12 @@ def _(INT_COLS, con, make_double_expr, make_int_expr, mo, rundb_button):
             sliced_total = con.execute("SELECT COUNT(*) FROM pses_sliced").fetchone()[0]
             mo.md(f"**Using existing pses_sliced**: {sliced_total:,} rows")
         except:
-            mo.md("*pses_sliced table not found*")
+            mo.md(no_db_msg)
     return
 
 
 @app.cell
-def _(FSQ, con, mo, rundb_button):
+def _(FSQ, con, mo, no_db_msg, rundb_button):
     if rundb_button.value:
         con.execute(f"""
             CREATE OR REPLACE TABLE theme_scores AS
@@ -367,12 +380,12 @@ def _(FSQ, con, mo, rundb_button):
             n_theme_scores = con.execute("SELECT COUNT(*) FROM theme_scores").fetchone()[0]
             mo.md(f"**Using existing theme_scores**: {n_theme_scores} rows")
         except:
-            mo.md("*theme_scores table not found*")
+            mo.md(no_db_msg)
     return
 
 
 @app.cell
-def _(con, mo, rundb_button):
+def _(con, mo, no_db_msg, rundb_button):
     if rundb_button.value:
         con.execute("""
             CREATE OR REPLACE TABLE yoy_changes AS
@@ -405,12 +418,12 @@ def _(con, mo, rundb_button):
             n_yoy = con.execute("SELECT COUNT(*) FROM yoy_changes").fetchone()[0]
             mo.md(f"**Using existing yoy_changes**: {n_yoy} rows")
         except:
-            mo.md("*yoy_changes table not found*")
+            mo.md(no_db_msg)
     return
 
 
 @app.cell
-def _(FSQ, con, mo, rundb_button):
+def _(FSQ, con, mo, no_db_msg, rundb_button):
     if rundb_button.value:
         import itertools
         from collections import defaultdict
@@ -477,12 +490,12 @@ def _(FSQ, con, mo, rundb_button):
             n_corr = con.execute("SELECT COUNT(*) FROM question_correlations").fetchone()[0]
             mo.md(f"**Using existing question_correlations**: {n_corr:,} rows")
         except:
-            mo.md("*question_correlations table not found*")
+            mo.md(no_db_msg)
     return
 
 
 @app.cell
-def _(FSQ, con, mo, rundb_button):
+def _(FSQ, con, mo, no_db_msg, rundb_button):
     if rundb_button.value:
         from scipy.stats import chi2_contingency
 
@@ -576,7 +589,7 @@ def _(FSQ, con, mo, rundb_button):
             n_chi = con.execute("SELECT COUNT(*) FROM chi_square_results").fetchone()[0]
             mo.md(f"**Using existing chi_square_results**: {n_chi} rows")
         except:
-            mo.md("*chi_square_results table not found*")
+            mo.md(no_db_msg)
     return
 
 
