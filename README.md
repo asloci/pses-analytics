@@ -15,7 +15,8 @@ The raw PSES release contains **12.2 million response records** — one row per 
 - **DuckDB** — analytical query engine; all tables live in a single `data/pses.duckdb` file
 - **Polars** — DataFrame operations
 - **marimo** — interactive notebooks (the pipeline and exploration UIs are marimo apps)
-- **Altair** — visualization
+- **Altair** — visualization (notebook 02)
+- **Plotly** — visualization (notebook 01 Survey Results section)
 
 ## Project structure
 
@@ -61,7 +62,7 @@ Run this command **from the repository root** so the notebook resolves `data/pse
 - load the theme/indicator taxonomy from the Subset 1 CSV,
 - create all analytical tables in `data/pses.duckdb`.
 
-The first run downloads a ~12M-row CSV and builds the database from scratch (a few minutes). If `data/pses.duckdb` already exists, the button rebuilds it for full reproducibility; if you do not click it, the notebook opens the existing database to display samples and statistics.
+The first run downloads a ~12M-row CSV and builds the database from scratch (a few minutes). If `data/pses.duckdb` already exists, the button rebuilds it for full reproducibility; if you do not click it, the notebook opens the existing database to display samples, statistics, and the Survey Results Analysis visuals — all of which render automatically once the database file is present, no button click required.
 
 ### 3. Explore the data
 
@@ -82,6 +83,7 @@ Builds all analytical tables from the source CSVs:
 3. **Transformation** — creates `pses_wog` (whole-of-government spine, typed, `9999 → NULL`), `pses_sliced` (demographic/org slices), and `pses_analysis` (wog + themes)
 4. **Statistical analysis** — computes `theme_scores`, `yoy_changes`, `question_correlations`, `chi_square_results`
 5. **Validation** — summarizes all tables created
+6. **Survey Results Analysis** — renders automatically once `data/pses.duckdb` exists (no button required): an overall mean trend line, overall year-over-year delta bar, sub-theme mean heatmap, and a sub-theme year-over-year delta faceted bar chart, with a narrative summary. All visuals are Plotly, wrapped in `mo.ui.plotly()` for browser rendering.
 
 **Output:** `data/pses.duckdb` with 10 tables.
 
